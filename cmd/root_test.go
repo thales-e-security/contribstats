@@ -11,15 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cmd
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/thales-e-security/contribstats/cmd"
+	"testing"
 )
 
-func main() {
-	//logrus.SetLevel(logrus.DebugLevel)
-	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
-	cmd.Execute()
+func TestExecute(t *testing.T) {
+
 }

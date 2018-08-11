@@ -4,11 +4,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/spf13/viper"
-	"net/http"
 	"encoding/json"
-	"net/http/httptest"
+	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/collector"
+	"net/http"
+	"net/http/httptest"
 	"time"
 )
 
@@ -17,25 +17,19 @@ func init() {
 }
 
 func TestNewStatServer(t *testing.T) {
-	type args struct {
-		debug bool
-	}
+
 	tests := []struct {
 		name   string
-		args   args
 		wantSs *StatServer
 	}{
 		{
-			name: "OK",
-			args: args{
-				debug: true,
-			},
+			name:   "OK",
 			wantSs: &StatServer{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotSs := NewStatServer(tt.args.debug); !reflect.DeepEqual(gotSs, tt.wantSs) {
+			if gotSs := NewStatServer(); !reflect.DeepEqual(gotSs, tt.wantSs) {
 				t.Errorf("NewStatServer() = %v, want %v", gotSs, tt.wantSs)
 			}
 		})
@@ -87,9 +81,7 @@ func TestStatServer_startServer(t *testing.T) {
 		name string
 		ss   *StatServer
 		args args
-	}{
-
-	}
+	}{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.ss.startServer(tt.args.errs)

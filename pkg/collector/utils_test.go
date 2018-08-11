@@ -1,9 +1,9 @@
 package collector
 
 import (
-	"testing"
 	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/config"
+	"testing"
 )
 
 func init() {

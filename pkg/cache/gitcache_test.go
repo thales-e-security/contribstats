@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-		"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 	"github.com/thales-e-security/contribstats/pkg/config"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 func init() {
@@ -25,13 +25,9 @@ func TestNewGitCache(t *testing.T) {
 		wantGc *GitCache
 	}{
 		{
-			name: "ok",
-			args: args{
-
-			},
-			wantGc: &GitCache{
-
-			},
+			name:   "ok",
+			args:   args{},
+			wantGc: &GitCache{},
 		},
 	}
 	for _, tt := range tests {
@@ -157,7 +153,7 @@ func Test_getLines(t *testing.T) {
 			name: "ok",
 			args: args{
 				commit: &object.Commit{
-					Hash:         plumbing.Hash{},
+					Hash:         plumbing.NewHash(""),
 					Author:       object.Signature{},
 					Committer:    object.Signature{},
 					PGPSignature: "",

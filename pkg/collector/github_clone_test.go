@@ -4,12 +4,12 @@ import (
 	"reflect"
 	"testing"
 
+	"fmt"
 	"github.com/google/go-github/github"
-	"github.com/thales-e-security/contribstats/pkg/cache"
+	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/mitchellh/go-homedir"
-	"fmt"
+	"github.com/thales-e-security/contribstats/pkg/cache"
 	"os"
 )
 

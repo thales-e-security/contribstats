@@ -2,7 +2,7 @@
 
 Microservice/command to get a collection stats for a given GitHub Organization.
 
-[![CircleCI](https://circleci.com/gh/thales-e-security/contribstats/tree/master.svg?style=svg)](https://circleci.com/gh/thales-e-security/contribstats/tree/master) [![codecov](https://codecov.io/gh/thales-e-security/contribstats/branch/master/graph/badge.svg)](https://codecov.io/gh/thales-e-security/contribstats)
+[![CircleCI](https://circleci.com/gh/thales-e-security/contribstats/tree/master.svg?style=svg)](https://circleci.com/gh/thales-e-security/contribstats/tree/master) [![codecov](https://codecov.io/gh/thales-e-security/contribstats/branch/master/graph/badge.svg)](https://codecov.io/gh/thales-e-security/contribstats) [![Go Report Card](https://goreportcard.com/badge/github.com/thales-e-security/contribstats)](https://goreportcard.com/report/github.com/thales-e-security/contribstats)
 
 
 ## Output

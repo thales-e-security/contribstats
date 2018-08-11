@@ -5,13 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"bytes"
-	)
+)
 
 var DefaultCache = filepath.Join(os.TempDir(), ".ghstats", "cache")
 
@@ -20,6 +20,7 @@ type GitCache struct {
 	members  []string
 	domains  []string
 }
+
 func NewGitCache(basepath string) (gc *GitCache) {
 	gc = &GitCache{
 		basepath: basepath,

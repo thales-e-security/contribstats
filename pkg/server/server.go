@@ -1,15 +1,15 @@
 package server
 
 import (
-	"net/http"
+	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"github.com/thales-e-security/contribstats/pkg/cache"
+	"github.com/thales-e-security/contribstats/pkg/collector"
+	"net/http"
 	"os"
 	"os/signal"
-	"github.com/thales-e-security/contribstats/pkg/collector"
-	"github.com/thales-e-security/contribstats/pkg/cache"
 	"time"
-	"github.com/spf13/viper"
-	"encoding/json"
 )
 
 type StatServer struct {
@@ -20,12 +20,8 @@ var osExit = os.Exit
 var cancel = make(chan struct{})
 var errs = make(chan error)
 
-func NewStatServer(debug bool) (ss *StatServer) {
+func NewStatServer() (ss *StatServer) {
 	ss = &StatServer{}
-	if debug {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-
 	// If token not provided by flag, then try by environment
 
 	return
@@ -66,7 +62,7 @@ func (ss *StatServer) startServer(errs chan error) {
 	}
 }
 
-func (ss *StatServer) startCollector(errs chan error) () {
+func (ss *StatServer) startCollector(errs chan error) {
 
 	var err error
 

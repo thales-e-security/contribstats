@@ -1,12 +1,12 @@
 package collector
 
 import (
-	"net/http"
-	"golang.org/x/oauth2"
-	"github.com/sirupsen/logrus"
-	"github.com/google/go-github/github"
 	"context"
+	"github.com/google/go-github/github"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
+	"net/http"
 )
 
 //NewV3Client returns an authenticated or anonymous GitHub v3 client

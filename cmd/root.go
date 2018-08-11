@@ -17,14 +17,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/sirupsen/logrus"
-	"github.com/thales-e-security/contribstats/pkg/server"
+	"github.com/spf13/cobra"
 	"github.com/thales-e-security/contribstats/pkg/config"
+	"github.com/thales-e-security/contribstats/pkg/server"
 )
 
 var cfgFile string
 var debug bool
+var s *server.StatServer
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -39,7 +40,7 @@ var RootCmd = &cobra.Command{
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 
-		s := server.NewStatServer(debug)
+		s = server.NewStatServer()
 		if err := s.Start(); err != nil {
 			logrus.Panic(err)
 		}
@@ -57,10 +58,10 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(func() {
-		cfgFile = config.InitConfig(cfgFile)
-	})
-
+	//cobra.OnInitialize(func() {
+	//	cfgFile = config.InitConfig(cfgFile)
+	//})
+	cfgFile = config.InitConfig(cfgFile)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
