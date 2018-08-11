@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "chart.fullname" . }}
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  .contribstats.yml: |-
+    interval: {{ .Values.config.interval }}
+    {{- if .Values.config.token }}
+    token: {{ .Values.config.token }}
+    {{- end}}
+    organizations:
+    {{- range .Values.config.organizations }}
+    - {{ . | lower }}
+    {{- end }}
+    domains:
+    {{- range .Values.config.domains }}
+    - {{ . | lower }}
+    {{- end }}
+    members:
+    {{- range .Values.config.members }}
+    - {{ . | lower }}
+    {{- end }}
