@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"github.com/thales-e-security/contribstats/pkg/collector"
+	"time"
 )
 
 func init() {
@@ -55,8 +56,24 @@ func TestStatServer_Start(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.ss.Start(); (err != nil) != tt.wantErr {
-				t.Errorf("StatServer.Start() error = %v, wantErr %v", err, tt.wantErr)
+			// store old os.Exit
+			oldOSExit := osExit
+			// override os.Exit
+			var got int
+			osExit = func(code int) {
+				got = code
+			}
+			// Start the server
+			go tt.ss.Start()
+			// wait for it...
+			time.Sleep(100 * time.Millisecond)
+			// Kill it ...
+			cancel <- struct{}{}
+			// repair os.Exit
+			osExit = oldOSExit
+			// See what we got
+			if got != 0 {
+				t.Error("Got unhealthy exit")
 			}
 		})
 	}
@@ -71,7 +88,7 @@ func TestStatServer_startServer(t *testing.T) {
 		ss   *StatServer
 		args args
 	}{
-		// TODO: Add test cases.
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,7 +106,13 @@ func TestStatServer_startCollector(t *testing.T) {
 		ss   *StatServer
 		args args
 	}{
-		// TODO: Add test cases.
+		{
+			name: "ok",
+			ss:   &StatServer{},
+			args: args{
+				errs: errs,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

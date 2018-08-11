@@ -6,20 +6,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/google/go-github/github"
 	"context"
-	"os"
 	"github.com/spf13/viper"
 )
 
-var testToken string
-
-func init() {
-	testToken = os.Getenv("GITHUB_TOKEN")
-}
 //NewV3Client returns an authenticated or anonymous GitHub v3 client
-func NewV3Client(token string) (client *github.Client, ctx context.Context) {
+func NewV3Client() (client *github.Client, ctx context.Context) {
 	ctx = context.Background()
 	var tc *http.Client
 	// Get authenticadtion if token present
+	token := viper.GetString("token")
 	if token != "" {
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: token},

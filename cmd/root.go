@@ -17,17 +17,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/sirupsen/logrus"
-	"path/filepath"
-	"strings"
 	"github.com/thales-e-security/contribstats/pkg/server"
+	"github.com/thales-e-security/contribstats/pkg/config"
 )
 
 var cfgFile string
-var cfgName = ".contribstats"
 var debug bool
 
 // RootCmd represents the base command when called without any subcommands
@@ -61,7 +57,9 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(func() {
+		cfgFile = config.InitConfig(cfgFile)
+	})
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -72,40 +70,4 @@ func init() {
 	// when this action is called directly.
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Debug Logging")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".contribstats" (without extension).
-		viper.AddConfigPath(home)
-		viper.AddConfigPath(".")
-		viper.AddConfigPath("/config")
-		viper.SetConfigName(cfgName)
-		cfgFile = filepath.Join(home, strings.Join([]string{cfgName, "yml"}, "."))
-	}
-	viper.SetEnvPrefix("CONTRIBSTATS")
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		//fmt.Println("Using config file:", viper.ConfigFileUsed())
-	} else {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			viper.SetDefault("domains", []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"})
-			viper.SetDefault("organizations", []string{"unorepo"})
-			viper.SetDefault("interval", 60)
-			viper.WriteConfigAs(cfgFile)
-		}
-	}
 }

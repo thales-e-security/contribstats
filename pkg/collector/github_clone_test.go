@@ -8,6 +8,9 @@ import (
 	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/mitchellh/go-homedir"
+	"fmt"
+	"os"
 )
 
 var testDomains = []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"}
@@ -18,7 +21,17 @@ func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	//
-	viper.Set("organizations", []string{"thales-e-security"})
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	viper.SetEnvPrefix("CONTRIBSTATS")
+	viper.AutomaticEnv() // read in environment variables that match
+	viper.AddConfigPath(home)
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("/config")
+	viper.SetConfigName(".contribstats")
 }
 
 func TestNewGitHubCloneCollector(t *testing.T) {

@@ -2,37 +2,40 @@ package collector
 
 import (
 	"testing"
+	"github.com/spf13/viper"
+	"github.com/thales-e-security/contribstats/pkg/config"
 )
 
+func init() {
+	config.InitConfig("")
+}
+
 func TestNewV3Client(t *testing.T) {
-	type args struct {
-		token string
-	}
+
 	tests := []struct {
 		name       string
-		args       args
 		wantClient bool
+		wantAuth   bool
 		wantCtx    bool
 	}{
 		{
-			name: "Anon",
-			args: args{
-
-			},
+			name:       "Anon",
 			wantClient: true,
+			wantAuth:   false,
 			wantCtx:    true,
 		}, {
-			name: "Tokent",
-			args: args{
-				token: "12321321",
-			},
+			name:       "Token",
 			wantClient: true,
+			wantAuth:   true,
 			wantCtx:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotClient, gotCtx := NewV3Client(tt.args.token)
+			if !tt.wantAuth {
+				viper.Set("token", nil)
+			}
+			gotClient, gotCtx := NewV3Client()
 			if (gotClient != nil) != tt.wantClient {
 				t.Errorf("NewV3Client() gotClient = %v, want %v", (gotClient != nil), tt.wantClient)
 

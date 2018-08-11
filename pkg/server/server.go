@@ -17,7 +17,8 @@ type StatServer struct {
 }
 
 var osExit = os.Exit
-var quit = make(chan os.Signal)
+var cancel = make(chan struct{})
+var errs = make(chan error)
 
 func NewStatServer(debug bool) (ss *StatServer) {
 	ss = &StatServer{}
@@ -31,9 +32,9 @@ func NewStatServer(debug bool) (ss *StatServer) {
 }
 
 func (ss *StatServer) Start() (err error) {
-
+	var quit = make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
-	errs := make(chan error)
+	//errs := make(chan error)
 	go ss.startCollector(errs)
 	// Start the Server in the background...
 	go ss.startServer(errs)
@@ -42,6 +43,9 @@ func (ss *StatServer) Start() (err error) {
 		select {
 		case err = <-errs:
 			logrus.Error(err)
+		case <-cancel:
+			logrus.Warn("got Cancel")
+			quit <- os.Signal(os.Interrupt)
 		case <-quit:
 			logrus.Warn("Quitting")
 			ss.cleanup()

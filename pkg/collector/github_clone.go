@@ -28,7 +28,7 @@ func NewGitHubCloneCollector(c cache.Cache) (ghc *GitHubCloneCollector) {
 		cache: c,
 	}
 	// Set the Client
-	ghc.client, ghc.ctx = NewV3Client(viper.GetString("token"))
+	ghc.client, ghc.ctx = NewV3Client()
 	return
 }
 
