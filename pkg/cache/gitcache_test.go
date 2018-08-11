@@ -6,7 +6,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/thales-e-security/contribstats/pkg/config"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
@@ -142,29 +141,13 @@ func Test_getLines(t *testing.T) {
 	type args struct {
 		commit *object.Commit
 	}
-
 	tests := []struct {
 		name      string
 		args      args
 		wantLines int64
 		wantErr   bool
 	}{
-		{
-			name: "ok",
-			args: args{
-				commit: &object.Commit{
-					Hash:         plumbing.NewHash(""),
-					Author:       object.Signature{},
-					Committer:    object.Signature{},
-					PGPSignature: "",
-					Message:      "",
-					TreeHash:     plumbing.Hash{},
-					ParentHashes: nil,
-				},
-			},
-			wantLines: 0,
-			wantErr:   false,
-		},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
