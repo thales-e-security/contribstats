@@ -2,6 +2,9 @@
 
 Microservice/command to get a collection stats for a given GitHub Organization.
 
+[![CircleCI](https://circleci.com/gh/thales-e-security/contribstats/tree/master.svg?style=svg)](https://circleci.com/gh/thales-e-security/contribstats/tree/master) [![codecov](https://codecov.io/gh/thales-e-security/contribstats/branch/master/graph/badge.svg)](https://codecov.io/gh/thales-e-security/contribstats)
+
+
 ## Output
 
 Output of the stats, will be a simple JSON format.

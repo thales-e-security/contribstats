@@ -11,7 +11,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"bytes"
-)
+	)
 
 var DefaultCache = filepath.Join(os.TempDir(), ".ghstats", "cache")
 
@@ -29,12 +29,7 @@ func NewGitCache(basepath string) (gc *GitCache) {
 func (gc *GitCache) Path() string {
 	return gc.basepath
 }
-func (gc *GitCache) Repos() (repos []string) {
-	filepath.Walk(gc.Path(), func(path string, info os.FileInfo, err error) error {
-		return nil
-	})
-	return
-}
+
 func (gc *GitCache) Add(repo, url string) (err error) {
 	repoPath := filepath.Join(gc.Path(), repo)
 	var rep *git.Repository

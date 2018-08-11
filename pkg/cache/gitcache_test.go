@@ -5,17 +5,14 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+		"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"github.com/thales-e-security/contribstats/pkg/config"
 )
-
-var testDomains = []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"}
-var testEmails = []string{"test@example.com", "test@example.com"}
 
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
-	viper.Set("members", []string{"scates@thalesesec.net"})
-	viper.Set("domains", []string{"thalesesec.net"})
+	config.InitConfig("")
 }
 
 func TestNewGitCache(t *testing.T) {
@@ -27,7 +24,15 @@ func TestNewGitCache(t *testing.T) {
 		args   args
 		wantGc *GitCache
 	}{
-		// TODO: Add test cases.
+		{
+			name: "ok",
+			args: args{
+
+			},
+			wantGc: &GitCache{
+
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -54,23 +59,6 @@ func TestGitCache_Path(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.gc.Path(); got != tt.want {
 				t.Errorf("GitCache.Path() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGitCache_Repos(t *testing.T) {
-	tests := []struct {
-		name      string
-		gc        *GitCache
-		wantRepos []string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if gotRepos := tt.gc.Repos(); !reflect.DeepEqual(gotRepos, tt.wantRepos) {
-				t.Errorf("GitCache.Repos() = %v, want %v", gotRepos, tt.wantRepos)
 			}
 		})
 	}
@@ -165,7 +153,22 @@ func Test_getLines(t *testing.T) {
 		wantLines int64
 		wantErr   bool
 	}{
-		// TODO: Create cases
+		{
+			name: "ok",
+			args: args{
+				commit: &object.Commit{
+					Hash:         plumbing.Hash{},
+					Author:       object.Signature{},
+					Committer:    object.Signature{},
+					PGPSignature: "",
+					Message:      "",
+					TreeHash:     plumbing.Hash{},
+					ParentHashes: nil,
+				},
+			},
+			wantLines: 0,
+			wantErr:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
