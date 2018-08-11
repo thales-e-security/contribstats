@@ -19,6 +19,6 @@ jobs:
     # specify any bash command here prefixed with `run: `
     - run: go get -u github.com/golang/dep/cmd/dep
     - run: dep ensure --vendor-only
-    - run: go test -v ./...
-    - run: go test -race -coverprofile=coverage.txt -covermode=atomic
+    - run: go test -v $(go list ./... | grep -v /vendor/)
+    - run: go test -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v /vendor/)
     - run: bash <(curl -s https://codecov.io/bash)
