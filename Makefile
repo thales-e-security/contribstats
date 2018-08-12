@@ -17,3 +17,7 @@ check-env:
 ifndef CONTRIBSTATS_TOKEN
   $(error CONTRIBSTATS_TOKEN is undefined, and is needed for proper API Access)
 endif
+
+test:
+	docker build -t thalesesecurity/contribstats:test -f Dockerfile.test .
+	docker run -ti --rm thalesesecurity/contribstats:test

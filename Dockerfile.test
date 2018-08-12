@@ -1,0 +1,11 @@
+FROM golang:1.10 as build
+RUN go get -u github.com/golang/dep/cmd/dep
+ADD main.go /go/src/github.com/thales-e-security/contribstats/main.go
+ADD vendor /go/src/github.com/thales-e-security/contribstats/vendor
+ADD cmd /go/src/github.com/thales-e-security/contribstats/cmd
+ADD pkg /go/src/github.com/thales-e-security/contribstats/pkg
+WORKDIR /go/src/github.com/thales-e-security/contribstats
+#RUN dep ensure --vendor-only
+ENV GOOS linux
+ENV GOARCH amd64
+CMD go test -v $(go list ./... | grep -v /vendor/)

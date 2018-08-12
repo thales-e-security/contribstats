@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"encoding/json"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/thales-e-security/contribstats/pkg/collector"
 	"net/http"
 	"net/http/httptest"
@@ -23,8 +25,10 @@ func TestNewStatServer(t *testing.T) {
 		wantSs *StatServer
 	}{
 		{
-			name:   "OK",
-			wantSs: &StatServer{},
+			name: "OK",
+			wantSs: &StatServer{
+				collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -40,33 +44,59 @@ func TestStatServer_Start(t *testing.T) {
 	tests := []struct {
 		name    string
 		ss      *StatServer
+		cancel  bool
+		quit    bool
+		error   bool
 		wantErr bool
 	}{
 		{
 			name:    "OK",
-			ss:      &StatServer{},
+			ss:      NewStatServer(),
 			wantErr: false,
+		},
+		{
+			name:    "Error",
+			ss:      NewStatServer(),
+			wantErr: true,
+		},
+		{
+			name:   "Cancel",
+			ss:     NewStatServer(),
+			cancel: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var gotExitCode int
 			// store old os.Exit
 			oldOSExit := osExit
 			// override os.Exit
-			var got int
 			osExit = func(code int) {
-				got = code
+				gotExitCode = code
 			}
+			if tt.wantErr {
+				httpListenAndServe = func(addr string, handler http.Handler) (err error) {
+					err = errors.New("expected error")
+					return
+				}
+			}
+
 			// Start the server
 			go tt.ss.Start()
 			// wait for it...
-			time.Sleep(100 * time.Millisecond)
-			// Kill it ...
-			cancel <- struct{}{}
+			time.Sleep(10 * time.Millisecond)
+
+			// Canceling
+			if tt.cancel {
+				// Kill it ...
+				cancel <- struct{}{}
+			}
+
 			// repair os.Exit
 			osExit = oldOSExit
-			// See what we got
-			if got != 0 {
+
+			// See what we gotExitCode
+			if gotExitCode != 0 {
 				t.Error("Got unhealthy exit")
 			}
 		})
@@ -81,7 +111,9 @@ func TestStatServer_startServer(t *testing.T) {
 		name string
 		ss   *StatServer
 		args args
-	}{}
+	}{
+		//TODO: Add Test Cases
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.ss.startServer(tt.args.errs)
@@ -94,21 +126,51 @@ func TestStatServer_startCollector(t *testing.T) {
 		errs chan error
 	}
 	tests := []struct {
-		name string
-		ss   *StatServer
-		args args
+		name    string
+		ss      *StatServer
+		args    args
+		wantErr bool
 	}{
 		{
-			name: "ok",
-			ss:   &StatServer{},
+			name: "OK",
+			ss:   NewStatServer(),
 			args: args{
 				errs: errs,
 			},
+			wantErr: false,
+		},
+		{
+			name: "Error",
+			ss: &StatServer{
+				collector: &MockCollector{
+					wantErr: true,
+				},
+			},
+			args: args{
+				errs: errs,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.ss.startCollector(tt.args.errs)
+			c := make(chan time.Time)
+
+			timeNewTicker = func(d time.Duration) *time.Ticker {
+				return &time.Ticker{
+					C: c,
+				}
+			}
+
+			go tt.ss.startCollector(tt.args.errs)
+			go func() {
+				time.Sleep(10 * time.Millisecond)
+				c <- time.Now()
+			}()
+			select {
+			case <-c:
+
+			}
 		})
 	}
 }
@@ -118,10 +180,16 @@ func TestStatServer_cleanup(t *testing.T) {
 		name string
 		ss   *StatServer
 	}{
-		// TODO: Add test cases.
+		{
+			name: "OK",
+			ss:   &StatServer{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			osExit = func(code int) {
+
+			}
 			tt.ss.cleanup()
 		})
 	}
@@ -139,7 +207,6 @@ func TestStatServer_statsHandler(t *testing.T) {
 		args   args
 		expect string
 	}{
-		// TODO: Add test cases.
 		{
 			name: "OK",
 			ss: &StatServer{
@@ -191,4 +258,16 @@ func AreEqualJSON(s1, s2 string) bool {
 	}
 
 	return reflect.DeepEqual(o1, o2)
+}
+
+type MockCollector struct {
+	wantErr bool
+}
+
+func (mc *MockCollector) Collect() (stats *collector.CollectReport, err error) {
+	stats = &collector.CollectReport{}
+	if mc.wantErr {
+		err = errors.New("expected error")
+	}
+	return
 }

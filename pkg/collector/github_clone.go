@@ -13,6 +13,8 @@ import (
 	"github.com/thales-e-security/contribstats/pkg/cache"
 )
 
+var timeAfter = time.After
+
 func init() {
 	//logrus.SetLevel(logrus.DebugLevel)
 }
@@ -22,6 +24,8 @@ type GitHubCloneCollector struct {
 	client *github.Client
 	cache  cache.Cache
 	ctx    context.Context
+	done   chan *RepoResults
+	errs   chan error
 }
 
 //NewGitHubCloneCollector returns a GitHubCloneCollector.
@@ -79,10 +83,8 @@ func (ghc *GitHubCloneCollector) Collect() (stats *CollectReport, err error) {
 			stats.Lines = stats.Lines + d.Lines
 		case err := <-errs:
 			logrus.Error(err)
-		case <-time.After(10 * time.Minute):
-			// TODO: a senstible timeout for when running in parallel
-			logrus.Fatal("Timeed out")
-			break
+		case <-timeAfter(10 * time.Minute):
+			return nil, errors.New("Timed out")
 		}
 	}
 	// For convenience, return a count of repos

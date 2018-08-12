@@ -4,5 +4,5 @@ package collector
 //Collector is a simple interface for git repo collectors for that return stats.
 type Collector interface {
 	// Collects stats from the API, and returns the values as a []byte of JSON content
-	Collect() (stats []byte, err error)
+	Collect() (stats *CollectReport, err error)
 }

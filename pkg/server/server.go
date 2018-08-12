@@ -8,7 +8,6 @@ import (
 	"github.com/thales-e-security/contribstats/pkg/collector"
 	"net/http"
 	"os"
-	"os/signal"
 	"time"
 )
 
@@ -19,25 +18,29 @@ type Server interface {
 
 // StatServer is starts and polls stats collection, and serves the results via a simple API
 type StatServer struct {
-	stats *collector.CollectReport
+	stats     *collector.CollectReport
+	collector collector.Collector
 }
 
 var osExit = os.Exit
-var cancel = make(chan struct{})
+var cancel = make(chan struct{}, 1)
 var errs = make(chan error)
+var timeNewTicker = time.NewTicker
+var httpListenAndServe = http.ListenAndServe
 
 //NewStatServer returns an instance of StatServer
 func NewStatServer() (ss *StatServer) {
-	ss = &StatServer{}
-	// If token not provided by flag, then try by environment
+	ss = &StatServer{
+		stats:     nil,
+		collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+	}
 
 	return
 }
 
 //Start will start the collector and api server and then block for errors, interrupts, or cancellation
 func (ss *StatServer) Start() (err error) {
-	var quit = make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt, os.Kill)
+
 	//errs := make(chan error)
 	go ss.startCollector(errs)
 	// Start the Server in the background...
@@ -46,15 +49,10 @@ func (ss *StatServer) Start() (err error) {
 	for {
 		select {
 		case err = <-errs:
-			logrus.Error(err)
+			return err
 		case <-cancel:
-			logrus.Warn("got Cancel")
-			quit <- os.Signal(os.Interrupt)
-		case <-quit:
-			logrus.Warn("Quitting")
+			logrus.Warn("Got Cancel")
 			ss.cleanup()
-			logrus.Exit(0)
-			return
 		}
 	}
 	return
@@ -62,37 +60,33 @@ func (ss *StatServer) Start() (err error) {
 
 func (ss *StatServer) startServer(errs chan error) {
 	// Server the simple API
-	http.HandleFunc("/", ss.statsHandler)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", ss.statsHandler)
 	// Start the server and wait for an error
-	err := http.ListenAndServe(":8080", nil)
+	err := httpListenAndServe(":8080", nil)
 	if err != nil {
 		errs <- err
 	}
 }
 
 func (ss *StatServer) startCollector(errs chan error) {
-
 	var err error
-
-	// Get a GitHubCloneCollector and make sure to add it's members and
-	gh := collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache))
-
 	// First Run....
 	logrus.Info("Bootstrapping Cache and Stats")
-	if ss.stats, err = gh.Collect(); err != nil {
+	if ss.stats, err = ss.collector.Collect(); err != nil {
 		errs <- err
 		return
 	}
 	logrus.Info("Updated Cache and Stats")
 	// Ticker to run the job on an interval provided by the config file... defaults to 60 seconds...
-	ticker := time.NewTicker(time.Duration(viper.GetInt("interval")) * time.Second)
+	ticker := timeNewTicker(time.Duration(viper.GetInt("interval")) * time.Second)
 
 	// Run the Collect func on a regular basis, and get ready to quit if needed
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				if ss.stats, err = gh.Collect(); err != nil {
+				if ss.stats, err = ss.collector.Collect(); err != nil {
 					errs <- err
 				}
 				logrus.Info("Updated Cache and Stats")
@@ -109,5 +103,5 @@ func (ss *StatServer) statsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ss *StatServer) cleanup() {
-	osExit(0)
+	// TODO: Cleanup Afterwards if needed
 }
