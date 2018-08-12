@@ -11,7 +11,7 @@ import (
 
 var cfgName = ".contribstats"
 
-// initConfig reads in config file and ENV variables if set.
+//InitConfig reads in config file and ENV variables if set.
 func InitConfig(cfgFile string) string {
 	if cfgFile != "" {
 		// Use config file from the flag.

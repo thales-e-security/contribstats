@@ -6,7 +6,14 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/thales-e-security/contribstats/pkg/config"
+	"gopkg.in/src-d/go-billy.v4/memfs"
+	"gopkg.in/src-d/go-billy.v4/util"
+	"gopkg.in/src-d/go-git-fixtures.v3"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/storage/memory"
+	"time"
 )
 
 func init() {
@@ -140,35 +147,9 @@ func TestGitCache_Stats(t *testing.T) {
 }
 
 func Test_getLines(t *testing.T) {
-	//repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-	//	URL: fixtures.Basic().One().URL,
-	//})
-	//// GEt the WorkTree
-	//wt, err := repo.Worktree()
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	//hash, err := wt.Add("/tmp/test")
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	//
-	//hash, err = wt.Commit("test", &git.CommitOptions{
-	//	All:       true,
-	//	Author:    nil,
-	//	Committer: nil,
-	//	Parents:   nil,
-	//})
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	////hash := plumbing.NewHash("b8e471f58bcbca63b07bda20e428190409c2db47")
-	//testCommit, err := repo.CommitObject(hash)
-	//if err != nil {
-	//	t.Error(err)
-	//}
+
 	type args struct {
-		commit *object.Commit
+		commit CommitIface
 	}
 	tests := []struct {
 		name      string
@@ -176,14 +157,33 @@ func Test_getLines(t *testing.T) {
 		wantLines int64
 		wantErr   bool
 	}{
-		//{
-		//	name: "OK",
-		//	args: args{
-		//		commit: testCommit,
-		//	},
-		//	wantLines: 0,
-		//	wantErr:   false,
-		//},
+		{
+			name: "OK",
+			args: args{
+				commit: getGoodCommit(t),
+			},
+			wantLines: 1,
+			wantErr:   false,
+		}, {
+			name: "ErrorTree",
+			args: args{
+				commit: &MockCommit{
+					treeErr: true,
+				},
+			},
+			wantErr: true,
+		}, {
+			name: "ErrorParent",
+			args: args{
+				commit: &MockCommit{
+					treeErr:    false,
+					parentsNum: 1,
+					parentsErr: true,
+					gc:         getGoodCommit(t),
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -197,4 +197,59 @@ func Test_getLines(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getGoodCommit(t *testing.T) (c *object.Commit) {
+	var repo *git.Repository
+	var wt *git.Worktree
+	var hash plumbing.Hash
+	var err error
+	// Clone an existing fixture repo to manipulate
+	repo, err = git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
+		URL: fixtures.Basic().One().URL,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	// Get the worktree to manipulate
+	wt, err = repo.Worktree()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Create a temp file to add to it.
+	err = util.WriteFile(wt.Filesystem, "foo", []byte("test"), 0755)
+	if err != nil {
+		t.Error(err)
+	}
+
+	//Add  path to the worktree
+	hash, err = wt.Add("foo")
+	if err != nil {
+		t.Error(err)
+	}
+
+	hash, err = wt.Commit("test", &git.CommitOptions{
+		All: true,
+		Author: &object.Signature{
+			Name:  "John Candy",
+			Email: "john@candy.com",
+			When:  time.Now(),
+		},
+		Committer: &object.Signature{
+			Name:  "John Candy",
+			Email: "john@candy.com",
+			When:  time.Now(),
+		},
+		Parents: []plumbing.Hash{},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	//hash := plumbing.NewHash("b8e471f58bcbca63b07bda20e428190409c2db47")
+	c, err = repo.CommitObject(hash)
+	if err != nil {
+		t.Error(err)
+	}
+	return
 }

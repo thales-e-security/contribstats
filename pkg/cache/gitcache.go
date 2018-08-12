@@ -120,7 +120,7 @@ func (gc *GitCache) Stats(reponame string) (commits int64, lines int64, err erro
 	return
 }
 
-func getLines(commit *object.Commit) (lines int64, err error) {
+func getLines(commit CommitIface) (lines int64, err error) {
 	// Get the lines from this commit and it's parent
 	var tree *object.Tree
 	var treeDiff object.Changes
