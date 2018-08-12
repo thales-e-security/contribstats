@@ -62,7 +62,11 @@ func init() {
 	//cobra.OnInitialize(func() {
 	//	cfgFile = config.InitConfig(cfgFile)
 	//})
-	cfgFile = config.InitConfig(cfgFile)
+	var err error
+	cfgFile, err = config.InitConfig(cfgFile)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.

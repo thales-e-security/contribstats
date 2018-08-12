@@ -1,27 +1,27 @@
 package config
 
 import (
-	"fmt"
 	"github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"os"
 	"path/filepath"
 	"strings"
 )
 
 var cfgName = ".contribstats"
+var homedirDir = homedir.Dir
+var readConfig = viper.ReadInConfig
 
 //InitConfig reads in config file and ENV variables if set.
-func InitConfig(cfgFile string) string {
+func InitConfig(cfgFile string) (string, error) {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find home directory.
-		home, err := homedir.Dir()
+		home, err := homedirDir()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return "", err
 		}
 
 		// Search config in home directory with name ".contribstats" (without extension).
@@ -35,7 +35,7 @@ func InitConfig(cfgFile string) string {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	if err := readConfig(); err == nil {
 		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 	} else {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -43,7 +43,10 @@ func InitConfig(cfgFile string) string {
 			viper.SetDefault("organizations", []string{"unorepo"})
 			viper.SetDefault("interval", 60)
 			viper.WriteConfigAs(cfgFile)
+		} else {
+			logrus.Info(err)
+
 		}
 	}
-	return cfgFile
+	return cfgFile, nil
 }
