@@ -25,7 +25,12 @@ import (
 
 var cfgFile string
 var debug bool
-var s *server.StatServer
+var s server.Server
+
+func init() {
+	s = server.NewStatServer()
+
+}
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -35,16 +40,12 @@ var RootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if debug {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-
-		s = server.NewStatServer()
 		if err := s.Start(); err != nil {
-			logrus.Panic(err)
+			logrus.Error(err)
 		}
-
 	},
 }
 
@@ -66,7 +67,6 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.contribstats.yaml)")
-
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")

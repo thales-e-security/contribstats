@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+type Server interface {
+	Start() (err error)
+}
+
 type StatServer struct {
 	stats *collector.CollectReport
 }

@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:66595e0ca5511f56ff4c4f532ea24d2760072805b795e3134cdde7fe0bead3f6"
+  name = "github.com/alcortesm/tgz"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9c5fe88206d7765837fed3732a42ef88fc51f1a1"
+
+[[projects]]
   digest = "1:de4a74b504df31145ffa8ca0c4edbffa2f3eb7f466753962184611b618fa5981"
   name = "github.com/emirpasic/gods"
   packages = [
@@ -89,6 +97,22 @@
   pruneopts = "UT"
   revision = "9fc7bb800b555d63157c65a904c86a2cc7b4e795"
   version = "0.4"
+
+[[projects]]
+  digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
+  name = "github.com/kr/pretty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:15b5cc79aad436d47019f814fde81a10221c740dc8ddf769221a65097fb6c2e9"
+  name = "github.com/kr/text"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
@@ -317,18 +341,35 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:fd4a663d6407f5fb9f7b41e1f0bdeaf744b6bf4e23e5cc463c34d6e39036229e"
+  branch = "v1"
+  digest = "1:af715ae33cc1f5695c4b2a4e4b21d008add8802a99e15bb467ac7c32edb5000d"
+  name = "gopkg.in/check.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "788fd78401277ebd861206a03c884797c6ec5541"
+
+[[projects]]
+  digest = "1:10c0f5dae08f093cecc212deb95c1ca9c5cf7a68e7052a53c64412b271102974"
   name = "gopkg.in/src-d/go-billy.v4"
   packages = [
     ".",
     "helper/chroot",
     "helper/polyfill",
+    "memfs",
     "osfs",
     "util",
   ]
   pruneopts = "UT"
   revision = "83cf655d40b15b427014d7875d10850f96edba14"
   version = "v4.2.0"
+
+[[projects]]
+  digest = "1:4d602cdbe95bddd8e0eacf015866c17d34f037faf481e310ada8028e7f78dced"
+  name = "gopkg.in/src-d/go-git-fixtures.v3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a29d269c3be65e4d1b20c29133c74e0551e1aa5d"
+  version = "v3.1.0"
 
 [[projects]]
   digest = "1:e0fabac30ae26530d84ebaefd95c62cbd280bb4176734913852cb1938bcc8610"
@@ -406,9 +447,13 @@
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "golang.org/x/oauth2",
+    "gopkg.in/src-d/go-billy.v4/memfs",
+    "gopkg.in/src-d/go-git-fixtures.v3",
     "gopkg.in/src-d/go-git.v4",
+    "gopkg.in/src-d/go-git.v4/plumbing",
     "gopkg.in/src-d/go-git.v4/plumbing/format/diff",
     "gopkg.in/src-d/go-git.v4/plumbing/object",
+    "gopkg.in/src-d/go-git.v4/storage/memory",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

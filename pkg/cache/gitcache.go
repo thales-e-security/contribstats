@@ -124,6 +124,7 @@ func getLines(commit *object.Commit) (lines int64, err error) {
 	if tree, err = commit.Tree(); err != nil {
 		return
 	}
+
 	if commit.NumParents() != 0 {
 		// Get the Parent for the commit
 		if parent, err = commit.Parent(0); err != nil {
@@ -148,9 +149,10 @@ func getLines(commit *object.Commit) (lines int64, err error) {
 		if p.IsBinary() {
 			continue
 		}
+
 		// Range over the chunks in a given filepatch
 		for _, chunk := range p.Chunks() {
-			if chunk.Type() != diff.Add {
+			if chunk.Type() == diff.Add || chunk.Type() == diff.Equal {
 				continue
 			}
 			ll := strings.Split(chunk.Content(), "\n")

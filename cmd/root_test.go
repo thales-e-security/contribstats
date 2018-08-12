@@ -15,8 +15,51 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/thales-e-security/contribstats/pkg/server"
 )
 
-func TestExecute(t *testing.T) {
+type modkStatServer struct {
+	server.StatServer
+	wantErr bool
+}
 
+func (mss *modkStatServer) Start() (err error) {
+	if mss.wantErr {
+		return errors.New("Expected Error")
+	}
+	return
+}
+
+func TestExecute(t *testing.T) {
+	tests := []struct {
+		name    string
+		wantErr bool
+		debug   bool
+		s       server.Server
+	}{
+		{
+			name:    "OK",
+			wantErr: false,
+			debug:   true,
+			s: &modkStatServer{
+				wantErr: false,
+			},
+		}, {
+			name:    "Error",
+			wantErr: true,
+			debug:   true,
+			s: &modkStatServer{
+				wantErr: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			debug = tt.debug
+			s = tt.s
+			Execute()
+		})
+	}
 }

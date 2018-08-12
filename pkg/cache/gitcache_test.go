@@ -109,7 +109,7 @@ func TestGitCache_Stats(t *testing.T) {
 				repo: "github.com/unorepo/uno",
 			},
 			wantCommits: 1,
-			wantLines:   0,
+			wantLines:   2,
 			wantErr:     false,
 		}, {
 			name: "Error",
@@ -138,6 +138,33 @@ func TestGitCache_Stats(t *testing.T) {
 }
 
 func Test_getLines(t *testing.T) {
+	//repo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
+	//	URL: fixtures.Basic().One().URL,
+	//})
+	//// GEt the WorkTree
+	//wt, err := repo.Worktree()
+	//if err != nil {
+	//	t.Error(err)
+	//}
+	//hash, err := wt.Add("/tmp/test")
+	//if err != nil {
+	//	t.Error(err)
+	//}
+	//
+	//hash, err = wt.Commit("test", &git.CommitOptions{
+	//	All:       true,
+	//	Author:    nil,
+	//	Committer: nil,
+	//	Parents:   nil,
+	//})
+	//if err != nil {
+	//	t.Error(err)
+	//}
+	////hash := plumbing.NewHash("b8e471f58bcbca63b07bda20e428190409c2db47")
+	//testCommit, err := repo.CommitObject(hash)
+	//if err != nil {
+	//	t.Error(err)
+	//}
 	type args struct {
 		commit *object.Commit
 	}
@@ -147,7 +174,14 @@ func Test_getLines(t *testing.T) {
 		wantLines int64
 		wantErr   bool
 	}{
-		// TODO: Add test cases.
+		//{
+		//	name: "OK",
+		//	args: args{
+		//		commit: testCommit,
+		//	},
+		//	wantLines: 0,
+		//	wantErr:   false,
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
