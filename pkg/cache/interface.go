@@ -14,7 +14,7 @@ type Cache interface {
 	Stats(repo string) (commits int64, lines int64, err error)
 }
 
-// Interface for Commits since go-git doesn't provide an interface.
+//CommitIface is interface for Commits since go-git doesn't provide an interface.
 type CommitIface interface {
 	// Tree returns the Tree from the commit.
 	Tree() (*object.Tree, error)

@@ -49,13 +49,12 @@ func (ss *StatServer) Start() (err error) {
 	for {
 		select {
 		case err = <-errs:
-			return err
+			return
 		case <-cancel:
 			logrus.Warn("Got Cancel")
 			ss.cleanup()
 		}
 	}
-	return
 }
 
 func (ss *StatServer) startServer(errs chan error) {

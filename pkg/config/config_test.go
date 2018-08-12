@@ -4,42 +4,49 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"path/filepath"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
 func TestInitConfig(t *testing.T) {
-	home, _ := homedir.Dir()
+	// Temp Files
+	f, _ := ioutil.TempFile("", "")
+	f.Write([]byte(`domains:
+- thalesesecurity.com
+- thalesesec.net
+- thales-e-security.com
+interval: 60
+organizations:
+- unorepo`))
 	type args struct {
 		cfgFile string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		homeErr bool
-		readErr bool
-		wantErr bool
+		name     string
+		args     args
+		override bool
+		homeErr  bool
+		readErr  bool
+		wantErr  bool
 	}{
 		{
 			name: "OK default",
 			args: args{
 				cfgFile: "",
 			},
-			want: filepath.Join(home, ".contribstats.yml"),
 		},
 		{
 			name: "OK override",
 			args: args{
-				cfgFile: "/test/.contribstats.yml",
+				cfgFile: f.Name(),
 			},
-			want: "/test/.contribstats.yml",
+			override: true,
 		}, {
 			name: "Error HomeDir",
 			args: args{
 				cfgFile: "",
 			},
-			want:    "",
 			homeErr: true,
 			wantErr: true,
 		}, {
@@ -47,7 +54,6 @@ func TestInitConfig(t *testing.T) {
 			args: args{
 				cfgFile: "",
 			},
-			want:    filepath.Join(home, ".contribstats.yml"),
 			homeErr: false,
 			readErr: true,
 			wantErr: false,
@@ -69,14 +75,15 @@ func TestInitConfig(t *testing.T) {
 			} else {
 				readConfig = viper.ReadInConfig
 			}
-			got, err := InitConfig(tt.args.cfgFile)
+			if tt.override {
+				defer os.Remove(f.Name())
+			}
+			err := InitConfig(tt.args.cfgFile)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("InitConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("InitConfig() = %v, want %v", got, tt.want)
-			}
+
 		})
 	}
 }

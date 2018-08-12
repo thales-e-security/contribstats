@@ -28,7 +28,6 @@ var debug bool
 var s server.Server
 
 func init() {
-	s = server.NewStatServer()
 
 }
 
@@ -43,6 +42,7 @@ var RootCmd = &cobra.Command{
 		if debug {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
+		s = server.NewStatServer()
 		if err := s.Start(); err != nil {
 			logrus.Error(err)
 		}
@@ -63,7 +63,7 @@ func init() {
 	//	cfgFile = config.InitConfig(cfgFile)
 	//})
 	var err error
-	cfgFile, err = config.InitConfig(cfgFile)
+	err = config.InitConfig(cfgFile)
 	if err != nil {
 		logrus.Fatal(err)
 	}
