@@ -101,7 +101,7 @@ func (gc *GitCache) Stats(reponame string) (commits int64, lines int64, err erro
 		if len(split) == 2 {
 			domain = split[1]
 		}
-		// See if this commit was commited by an email address or domain we are looking for
+		// See if this commit was committed by an email address or domain we are looking for
 		if stringInSlice(commit.Committer.Email, members) || stringInSlice(domain, domains) {
 			// increment the commit count
 			commits = commits + 1
@@ -132,7 +132,6 @@ func getLines(commit *object.Commit) (lines int64, err error) {
 	if tree, err = commit.Tree(); err != nil {
 		return
 	}
-
 	if commit.NumParents() != 0 {
 		// Get the Parent for the commit
 		if parent, err = commit.Parent(0); err != nil {
@@ -157,7 +156,6 @@ func getLines(commit *object.Commit) (lines int64, err error) {
 		if p.IsBinary() {
 			continue
 		}
-
 		// Range over the chunks in a given filepatch
 		for _, chunk := range p.Chunks() {
 			if chunk.Type() == diff.Add || chunk.Type() == diff.Equal {

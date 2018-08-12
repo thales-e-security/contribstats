@@ -17,12 +17,15 @@ func init() {
 	//logrus.SetLevel(logrus.DebugLevel)
 }
 
+//GitHubCloneCollector uses offline caching of repos to obtain stats of contribution by members and domains of interest
 type GitHubCloneCollector struct {
 	client *github.Client
 	cache  cache.Cache
 	ctx    context.Context
 }
 
+//NewGitHubCloneCollector returns a GitHubCloneCollector.
+//
 func NewGitHubCloneCollector(c cache.Cache) (ghc *GitHubCloneCollector) {
 	ghc = &GitHubCloneCollector{
 		cache: c,
@@ -32,11 +35,14 @@ func NewGitHubCloneCollector(c cache.Cache) (ghc *GitHubCloneCollector) {
 	return
 }
 
+//RepoResults contains results from an individual repository
 type RepoResults struct {
 	Repo    string
 	Commits int64
 	Lines   int64
 }
+
+//CollectReport contains the results of an entire collection of repos, and an aggregated value of each stats
 type CollectReport struct {
 	Repos    []*RepoResults `json:"repos,omitempty"`
 	Commits  int64          `json:"commits"`
@@ -97,7 +103,7 @@ func (ghc *GitHubCloneCollector) processRepo(repo *github.Repository, done chan 
 		errs <- err
 		return
 	}
-	// Generate teh scaffolding
+	// Generate the scaffolding
 	r := &RepoResults{
 		Repo: name,
 	}
