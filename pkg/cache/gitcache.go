@@ -13,26 +13,36 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
+//DefaultCache location for where to cache cloned/fetched repos
 var DefaultCache = filepath.Join(os.TempDir(), ".ghstats", "cache")
 
+//GitCache will store, and process git repos and return stats for serving by the StatsServer
 type GitCache struct {
 	basepath string
 	members  []string
 	domains  []string
 }
 
+//NewGitCache returns a GitCache object in the location of "basepath".
+//If basepath is zero value then the DefaultCache variable will be used.
 func NewGitCache(basepath string) (gc *GitCache) {
+	if basepath == "" {
+		basepath = DefaultCache
+	}
 	gc = &GitCache{
 		basepath: basepath,
 	}
 	return gc
 }
+
+//Path returns the basepath location
 func (gc *GitCache) Path() string {
 	return gc.basepath
 }
 
-func (gc *GitCache) Add(repo, url string) (err error) {
-	repoPath := filepath.Join(gc.Path(), repo)
+//Add will add a given repo's name and it's clone URL to the cache for later processing
+func (gc *GitCache) Add(reponame, url string) (err error) {
+	repoPath := filepath.Join(gc.Path(), reponame)
 	var rep *git.Repository
 	if _, err = os.Stat(repoPath); err != nil {
 		if os.IsNotExist(err) {
@@ -47,7 +57,7 @@ func (gc *GitCache) Add(repo, url string) (err error) {
 		} else {
 			return
 		}
-		logrus.Debugf("Cloned %v into %v", repo, repoPath)
+		logrus.Debugf("Cloned %v into %v", reponame, repoPath)
 	} else {
 		// Fetch existing repos to keep them up to date
 		if rep, err = git.PlainOpen(repoPath); err != nil {
@@ -62,16 +72,17 @@ func (gc *GitCache) Add(repo, url string) (err error) {
 				return
 			}
 		}
-		logrus.Debugf("Fetched %v in %v", repo, repoPath)
+		logrus.Debugf("Fetched %v in %v", reponame, repoPath)
 	}
 	return
 }
 
-func (gc *GitCache) Stats(repo string) (commits int64, lines int64, err error) {
-	logrus.Debugf("Processing repo '%s'", repo)
+//Stats processes a given reponame for stats and returns the number of commits and lines of matched members, or domains.
+func (gc *GitCache) Stats(reponame string) (commits int64, lines int64, err error) {
+	logrus.Debugf("Processing repo '%s'", reponame)
 	var rep *git.Repository
 	var logs object.CommitIter
-	repoPath := filepath.Join(gc.Path(), repo)
+	repoPath := filepath.Join(gc.Path(), reponame)
 	members := viper.GetStringSlice("members")
 	domains := viper.GetStringSlice("domains")
 	if rep, err = git.PlainOpen(repoPath); err != nil {
@@ -82,33 +93,30 @@ func (gc *GitCache) Stats(repo string) (commits int64, lines int64, err error) {
 		Order: git.LogOrderDefault,
 	}); err != nil {
 		return
-	} else {
-		// For each commit entry, let's process the contents
-		err = logs.ForEach(func(commit *object.Commit) (err error) {
-			split := strings.Split(commit.Committer.Email, "@")
-			var domain string
-			if len(split) == 2 {
-				domain = split[1]
-			}
-			// See if this commit was commited by an email address or domain we are looking for
-			if stringInSlice(commit.Committer.Email, members) || stringInSlice(domain, domains) {
-				// increment the commit count
-				commits = commits + 1
-				var newLines int64
-				newLines, err = getLines(commit)
-				if err != nil {
-					logrus.Errorf("[%s] failed to get lines for commit %s: %s", repo, commit.Hash, err)
-					return
-				}
-				lines = lines + newLines
-				//logrus.Debugf("[%s] commit %s had %d lines", repo, commit.Hash, lines)
-			}
-			return
-		})
-		if err != nil {
-			return
-		}
 	}
+	// For each commit entry, let's process the contents
+	logs.ForEach(func(commit *object.Commit) (err error) {
+		split := strings.Split(commit.Committer.Email, "@")
+		var domain string
+		if len(split) == 2 {
+			domain = split[1]
+		}
+		// See if this commit was commited by an email address or domain we are looking for
+		if stringInSlice(commit.Committer.Email, members) || stringInSlice(domain, domains) {
+			// increment the commit count
+			commits = commits + 1
+			var newLines int64
+			newLines, err = getLines(commit)
+			if err != nil {
+				logrus.Errorf("[%s] failed to get lines for commit %s: %s", reponame, commit.Hash, err)
+				return
+			}
+			lines = lines + newLines
+			//logrus.Debugf("[%s] commit %s had %d lines", reponame, commit.Hash, lines)
+		}
+		return
+	})
+
 	return
 }
 

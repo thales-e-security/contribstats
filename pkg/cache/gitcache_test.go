@@ -24,9 +24,11 @@ func TestNewGitCache(t *testing.T) {
 		wantGc *GitCache
 	}{
 		{
-			name:   "ok",
-			args:   args{},
-			wantGc: &GitCache{},
+			name: "ok",
+			args: args{},
+			wantGc: &GitCache{
+				basepath: DefaultCache,
+			},
 		},
 	}
 	for _, tt := range tests {

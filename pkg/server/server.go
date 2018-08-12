@@ -12,10 +12,12 @@ import (
 	"time"
 )
 
+// Server defines the interface for StatsServer and it's mock
 type Server interface {
 	Start() (err error)
 }
 
+// StatServer is starts and polls stats collection, and serves the results via a simple API
 type StatServer struct {
 	stats *collector.CollectReport
 }
@@ -24,6 +26,7 @@ var osExit = os.Exit
 var cancel = make(chan struct{})
 var errs = make(chan error)
 
+//NewStatServer returns an instance of StatServer
 func NewStatServer() (ss *StatServer) {
 	ss = &StatServer{}
 	// If token not provided by flag, then try by environment
@@ -31,6 +34,7 @@ func NewStatServer() (ss *StatServer) {
 	return
 }
 
+//Start will start the collector and api server and then block for errors, interrupts, or cancellation
 func (ss *StatServer) Start() (err error) {
 	var quit = make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
