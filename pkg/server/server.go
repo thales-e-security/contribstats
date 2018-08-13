@@ -65,7 +65,7 @@ func (ss *StatServer) startServer(errs chan error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ss.statsHandler)
 	// Start the server and wait for an error
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		errs <- err
 	}
