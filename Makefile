@@ -10,8 +10,8 @@ push: build
 run: build
 	docker run -ti --rm thalesesecurity/contribstats
 
-helm: check-env push
-	helm upgrade --install --set config.token=$(CONTRIBSTATS_TOKEN) --recreate-pods ghstats chart
+helm: check-env 
+	helm upgrade --install --set config.token=$(CONTRIBSTATS_TOKEN) --set ingress.istio=true --set config.organizations={thales-e-security} --recreate-pods ghstats chart
 
 check-env:
 ifndef CONTRIBSTATS_TOKEN
