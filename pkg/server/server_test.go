@@ -6,16 +6,17 @@ import (
 
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/thales-e-security/contribstats/pkg/collector"
+	"github.com/thales-e-security/contribstats/pkg/config"
 	"net/http"
 	"net/http/httptest"
 	"time"
 )
 
-func init() {
-	viper.Set("interval", 60)
+var constants = config.Constants{
+	Organizations: []string{"unorepo"},
+	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
 }
 
 func TestNewStatServer(t *testing.T) {
@@ -27,13 +28,14 @@ func TestNewStatServer(t *testing.T) {
 		{
 			name: "OK",
 			wantSs: &StatServer{
-				collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+				constants: constants,
+				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotSs := NewStatServer(); !reflect.DeepEqual(gotSs, tt.wantSs) {
+			if gotSs := NewStatServer(constants); !reflect.DeepEqual(gotSs, tt.wantSs) {
 				t.Errorf("NewStatServer() = %v, want %v", gotSs, tt.wantSs)
 			}
 		})
@@ -51,17 +53,17 @@ func TestStatServer_Start(t *testing.T) {
 	}{
 		{
 			name:    "OK",
-			ss:      NewStatServer(),
+			ss:      NewStatServer(constants),
 			wantErr: false,
 		},
 		{
 			name:    "Error",
-			ss:      NewStatServer(),
+			ss:      NewStatServer(constants),
 			wantErr: true,
 		},
 		{
 			name:   "Cancel",
-			ss:     NewStatServer(),
+			ss:     NewStatServer(constants),
 			cancel: true,
 		},
 	}
@@ -75,10 +77,7 @@ func TestStatServer_Start(t *testing.T) {
 				gotExitCode = code
 			}
 			if tt.wantErr {
-				httpListenAndServe = func(addr string, handler http.Handler) (err error) {
-					err = errors.New("expected error")
-					return
-				}
+				//TODO: find a way to force and error on the listener
 			}
 
 			// Start the server
@@ -135,7 +134,7 @@ func TestStatServer_startCollector(t *testing.T) {
 			name: "OK",
 			ss: &StatServer{
 				stats:     nil,
-				collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
 			},
 			args: args{
 				errs: errs,

@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/config"
 	"testing"
 )
@@ -17,25 +16,28 @@ func TestNewV3Client(t *testing.T) {
 		wantClient bool
 		wantAuth   bool
 		wantCtx    bool
+		constants  config.Constants
 	}{
 		{
 			name:       "Anon",
 			wantClient: true,
 			wantAuth:   false,
 			wantCtx:    true,
+			constants:  config.Constants{},
 		}, {
 			name:       "Token",
 			wantClient: true,
 			wantAuth:   true,
 			wantCtx:    true,
+			constants:  config.Constants{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if !tt.wantAuth {
-				viper.Set("token", nil)
+				tt.constants.Token = ""
 			}
-			gotClient, gotCtx := NewV3Client()
+			gotClient, gotCtx := NewV3Client(tt.constants)
 			if (gotClient != nil) != tt.wantClient {
 				t.Errorf("NewV3Client() gotClient = %v, want %v", (gotClient != nil), tt.wantClient)
 

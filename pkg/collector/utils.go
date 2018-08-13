@@ -5,16 +5,17 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/thales-e-security/contribstats/pkg/config"
 	"golang.org/x/oauth2"
 	"net/http"
 )
 
 //NewV3Client returns an authenticated or anonymous GitHub v3 client
-func NewV3Client() (client *github.Client, ctx context.Context) {
+func NewV3Client(constants config.Constants) (client *github.Client, ctx context.Context) {
 	ctx = context.Background()
 	var tc *http.Client
 	// Get authenticadtion if token present
-	token := viper.GetString("token")
+	token := constants.Token
 	if token != "" {
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: token},

@@ -78,7 +78,7 @@ organizations:
 			if tt.override {
 				defer os.Remove(f.Name())
 			}
-			err := InitConfig(tt.args.cfgFile)
+			_, err := InitConfig(tt.args.cfgFile)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("InitConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

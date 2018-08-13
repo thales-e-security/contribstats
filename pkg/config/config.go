@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/mitchellh/go-homedir"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"path/filepath"
 	"strings"
@@ -12,13 +11,22 @@ var cfgName = ".contribstats"
 var homedirDir = homedir.Dir
 var readConfig = viper.ReadInConfig
 
+//Constants store the viper config results after loading for layer passing around
+type Constants struct {
+	Interval      int
+	Token         string
+	Organizations []string
+	Domains       []string
+	Members       []string
+}
+
 //InitConfig reads in config file and ENV variables if set.
-func InitConfig(in string) (err error) {
+func InitConfig(in string) (constants Constants, err error) {
 	// Find home directory.
 	var home string
 	home, err = homedirDir()
 	if err != nil {
-		return err
+		return
 	}
 	viper.SetConfigType("yaml")
 
@@ -45,10 +53,8 @@ func InitConfig(in string) (err error) {
 			viper.SetDefault("organizations", []string{"unorepo"})
 			viper.SetDefault("interval", 60)
 			viper.WriteConfigAs(filepath.Join(home, strings.Join([]string{cfgName, "yml"}, ".")))
-		} else {
-			logrus.Fatal(err)
-
 		}
 	}
+	err = viper.Unmarshal(&constants)
 	return
 }

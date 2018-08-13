@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/thales-e-security/contribstats/pkg/config"
 	"github.com/thales-e-security/contribstats/pkg/server"
 )
 
@@ -59,10 +60,9 @@ func TestExecute(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			debug = tt.debug
-			serverNewStatServer = func() (ss server.Server) {
-				ss = &modkStatServer{
-					wantErr: true,
-				}
+			serverNewStatServer = func(huh config.Constants) (ss server.Server) {
+				ss = tt.s
+
 				return
 			}
 			Execute()

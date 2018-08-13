@@ -9,8 +9,8 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/cache"
+	"github.com/thales-e-security/contribstats/pkg/config"
 )
 
 var timeAfter = time.After
@@ -21,21 +21,23 @@ func init() {
 
 //GitHubCloneCollector uses offline caching of repos to obtain stats of contribution by members and domains of interest
 type GitHubCloneCollector struct {
-	client *github.Client
-	cache  cache.Cache
-	ctx    context.Context
-	done   chan *RepoResults
-	errs   chan error
+	client    *github.Client
+	cache     cache.Cache
+	ctx       context.Context
+	done      chan *RepoResults
+	errs      chan error
+	constants config.Constants
 }
 
 //NewGitHubCloneCollector returns a GitHubCloneCollector.
 //
-func NewGitHubCloneCollector(c cache.Cache) (ghc *GitHubCloneCollector) {
+func NewGitHubCloneCollector(contants config.Constants, c cache.Cache) (ghc *GitHubCloneCollector) {
 	ghc = &GitHubCloneCollector{
-		cache: c,
+		cache:     c,
+		constants: contants,
 	}
 	// Set the Client
-	ghc.client, ghc.ctx = NewV3Client()
+	ghc.client, ghc.ctx = NewV3Client(contants)
 	return
 }
 
@@ -61,7 +63,7 @@ func (ghc *GitHubCloneCollector) Collect() (stats *CollectReport, err error) {
 	var errs = make(chan error)
 	stats = &CollectReport{}
 	// List of Repos
-	for _, org := range viper.GetStringSlice("organizations") {
+	for _, org := range ghc.constants.Organizations {
 		var tRepos []*github.Repository
 		if tRepos, _, err = ghc.client.Repositories.ListByOrg(ghc.ctx, org, nil); err != nil {
 			return

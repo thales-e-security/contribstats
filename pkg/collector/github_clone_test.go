@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/cache"
+	"github.com/thales-e-security/contribstats/pkg/config"
 	"os"
 	"time"
 )
@@ -18,6 +19,10 @@ import (
 var testDomains = []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"}
 var testEmails = []string{"test@example.com", "test@example.com"}
 var testCache = cache.NewGitCache(cache.DefaultCache)
+var constants = config.Constants{
+	Organizations: []string{"unorepo"},
+	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
+}
 
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
@@ -36,12 +41,13 @@ func init() {
 }
 
 func TestNewGitHubCloneCollector(t *testing.T) {
-	gh := NewGitHubCloneCollector(testCache)
+	gh := NewGitHubCloneCollector(constants, testCache)
 
 	type args struct {
 		organization string
 		token        string
 		cache        cache.Cache
+		constants    config.Constants
 	}
 	tests := []struct {
 		name string
@@ -51,14 +57,15 @@ func TestNewGitHubCloneCollector(t *testing.T) {
 		{
 			name: "thales-e-security",
 			args: args{
-				cache: testCache,
+				constants: constants,
+				cache:     testCache,
 			},
 			want: gh,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewGitHubCloneCollector(tt.args.cache); !reflect.DeepEqual(got, tt.want) {
+			if got := NewGitHubCloneCollector(tt.args.constants, tt.args.cache); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewGitHubCloneCollector() = %v, want %v", got, tt.want)
 			}
 		})
@@ -78,20 +85,20 @@ func TestGitHubCloneCollector_Collect(t *testing.T) {
 
 		{
 			name:          "OK",
-			ghc:           NewGitHubCloneCollector(testCache),
+			ghc:           NewGitHubCloneCollector(constants, testCache),
 			wantStats:     true,
 			wantErr:       false,
 			organizations: []string{"thales-e-security"},
 		},
 		{
 			name:          "Error",
-			ghc:           NewGitHubCloneCollector(testCache),
+			ghc:           NewGitHubCloneCollector(constants, testCache),
 			wantStats:     true,
 			wantErr:       true,
 			organizations: []string{"tthales-e-security"},
 		}, {
 			name:          "Timeout",
-			ghc:           NewGitHubCloneCollector(testCache),
+			ghc:           NewGitHubCloneCollector(constants, testCache),
 			wantStats:     false,
 			wantErr:       true,
 			wantTimeout:   true,
@@ -101,7 +108,7 @@ func TestGitHubCloneCollector_Collect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.organizations != nil {
-				viper.Set("organizations", tt.organizations)
+				tt.ghc.constants.Organizations = tt.organizations
 			}
 			if tt.wantTimeout {
 				timeAfter = func(d time.Duration) <-chan time.Time {
@@ -138,7 +145,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 	}{
 		{
 			name: "Good",
-			ghc:  NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+			ghc:  NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
 			args: args{
 				repo: &github.Repository{
 					Name:     github.String("linux-kernel"),
@@ -150,7 +157,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			wantErr: false,
 		}, {
 			name: "Error Add",
-			ghc:  NewGitHubCloneCollector(&MockCache{add: true}),
+			ghc:  NewGitHubCloneCollector(constants, &MockCache{add: true}),
 			args: args{
 				repo: &github.Repository{
 					Name:     github.String("linux-kernel"),
@@ -162,7 +169,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			wantErr: true,
 		}, {
 			name: "Error Add",
-			ghc:  NewGitHubCloneCollector(&MockCache{stats: true}),
+			ghc:  NewGitHubCloneCollector(constants, &MockCache{stats: true}),
 			args: args{
 				repo: &github.Repository{
 					Name:     github.String("linux-kernel"),

@@ -3,9 +3,9 @@ package server
 import (
 	"encoding/json"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/thales-e-security/contribstats/pkg/collector"
+	"github.com/thales-e-security/contribstats/pkg/config"
 	"net/http"
 	"os"
 	"time"
@@ -20,19 +20,22 @@ type Server interface {
 type StatServer struct {
 	stats     *collector.CollectReport
 	collector collector.Collector
+	constants config.Constants
 }
 
 var osExit = os.Exit
 var cancel = make(chan struct{}, 1)
 var errs = make(chan error)
 var timeNewTicker = time.NewTicker
-var httpListenAndServe = http.ListenAndServe
+
+//var httpListenAndServe = http.ListenAndServe
 
 //NewStatServer returns an instance of StatServer
-func NewStatServer() (ss Server) {
+func NewStatServer(constants config.Constants) (ss Server) {
 	ss = &StatServer{
 		stats:     nil,
-		collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
+		constants: constants,
 	}
 
 	return
@@ -62,7 +65,7 @@ func (ss *StatServer) startServer(errs chan error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ss.statsHandler)
 	// Start the server and wait for an error
-	err := httpListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		errs <- err
 	}
@@ -78,7 +81,7 @@ func (ss *StatServer) startCollector(errs chan error) {
 	}
 	logrus.Info("Updated Cache and Stats")
 	// Ticker to run the job on an interval provided by the config file... defaults to 60 seconds...
-	ticker := timeNewTicker(time.Duration(viper.GetInt("interval")) * time.Second)
+	ticker := timeNewTicker(time.Duration(ss.constants.Interval) * time.Second)
 
 	// Run the Collect func on a regular basis, and get ready to quit if needed
 	go func() {
