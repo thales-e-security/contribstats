@@ -26,6 +26,7 @@ import (
 var cfgFile string
 var debug bool
 var s server.Server
+var serverNewStatServer = server.NewStatServer
 
 func init() {
 
@@ -42,7 +43,7 @@ var RootCmd = &cobra.Command{
 		if debug {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		s = server.NewStatServer()
+		s = serverNewStatServer()
 		if err := s.Start(); err != nil {
 			logrus.Error(err)
 		}

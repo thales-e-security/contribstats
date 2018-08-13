@@ -29,7 +29,7 @@ var timeNewTicker = time.NewTicker
 var httpListenAndServe = http.ListenAndServe
 
 //NewStatServer returns an instance of StatServer
-func NewStatServer() (ss *StatServer) {
+func NewStatServer() (ss Server) {
 	ss = &StatServer{
 		stats:     nil,
 		collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
@@ -51,8 +51,8 @@ func (ss *StatServer) Start() (err error) {
 		case err = <-errs:
 			return
 		case <-cancel:
-			logrus.Warn("Got Cancel")
 			ss.cleanup()
+			return
 		}
 	}
 }

@@ -22,7 +22,7 @@ func TestNewStatServer(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		wantSs *StatServer
+		wantSs Server
 	}{
 		{
 			name: "OK",
@@ -43,7 +43,7 @@ func TestNewStatServer(t *testing.T) {
 func TestStatServer_Start(t *testing.T) {
 	tests := []struct {
 		name    string
-		ss      *StatServer
+		ss      Server
 		cancel  bool
 		quit    bool
 		error   bool
@@ -133,7 +133,10 @@ func TestStatServer_startCollector(t *testing.T) {
 	}{
 		{
 			name: "OK",
-			ss:   NewStatServer(),
+			ss: &StatServer{
+				stats:     nil,
+				collector: collector.NewGitHubCloneCollector(cache.NewGitCache(cache.DefaultCache)),
+			},
 			args: args{
 				errs: errs,
 			},
