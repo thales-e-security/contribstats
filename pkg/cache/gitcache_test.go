@@ -289,7 +289,7 @@ func getGoodCommit(t *testing.T) (c *object.Commit) {
 	}
 
 	//Add  path to the worktree
-	hash, err = wt.Add("foo")
+	_, err = wt.Add("foo")
 	if err != nil {
 		t.Error(err)
 	}
