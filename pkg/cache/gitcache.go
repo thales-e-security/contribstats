@@ -60,7 +60,9 @@ func (gc *GitCache) Add(reponame, url string) (err error) {
 		logrus.Debugf("Cloned %v into %v", reponame, repoPath)
 	} else {
 		// Fetch existing repos to keep them up to date
-		if rep, err = git.PlainOpen(repoPath); err != nil {
+		if rep, err = git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{
+			DetectDotGit: true,
+		}); err != nil {
 			return
 		}
 		if err = rep.Fetch(&git.FetchOptions{

@@ -13,6 +13,9 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -69,28 +72,90 @@ func TestGitCache_Path(t *testing.T) {
 }
 
 func TestGitCache_Add(t *testing.T) {
+	td, _ := ioutil.TempDir("", "")
+	td2, _ := ioutil.TempDir("", "")
+	defer func() {
+		os.RemoveAll(td)
+		//os.RemoveAll(td2)
+	}()
 	type args struct {
 		repo string
 		url  string
 	}
 	tests := []struct {
-		name    string
-		gc      *GitCache
-		args    args
-		wantErr bool
+		name      string
+		gc        *GitCache
+		args      args
+		wantErr   bool
+		badClone  bool
+		badConfig bool
 	}{
 		{
-			name: "OK",
-			gc:   NewGitCache(DefaultCache),
+			name: "OK Default",
+			gc:   NewGitCache(td),
 			args: args{
 				repo: "github.com/unorepo/uno",
 				url:  "https://github.com/unorepo/uno.git",
 			},
 			wantErr: false,
 		},
+		{
+			name: "OK Empty",
+			gc:   NewGitCache(""),
+			args: args{
+				repo: "github.com/unorepo/uno",
+				url:  "https://github.com/unorepo/uno.git",
+			},
+			wantErr: false,
+		}, {
+			name: "Error BadPath",
+			gc: &GitCache{
+				basepath: "/jfkldasjfkladsjfkl;adsjkl;fjdsakl;jfdakls;",
+			},
+			args: args{
+				repo: "github.com/unorepo/uno",
+				url:  "https://github.com/unorepo/uno.git",
+			},
+			wantErr: true,
+		}, {
+			name: "Error BadClonin",
+			gc: &GitCache{
+				basepath: td2,
+			},
+			args: args{
+				repo: "github.com/unorepo/uno",
+				url:  "https://github.com/unorepo/uno.git",
+			},
+			badClone: true,
+			wantErr:  true,
+		},
+		// TODO: Force a Bad Fetch to happen
+		//
+		//{
+		//	name: "Error BadFetch",
+		//	gc: &GitCache{
+		//		basepath: td2,
+		//	},
+		//	args: args{
+		//		repo: "github.com/unorepo/uno",
+		//		url:  "https://github.com/unorepo/uno.git",
+		//	},
+		//	badConfig: true,
+		//	wantErr:   true,
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			gitDir := filepath.Join(tt.gc.Path(), tt.args.repo, ".git")
+			if tt.badClone {
+				// clone first, then mess it up
+				tt.gc.Add(tt.args.repo, tt.args.url)
+				os.RemoveAll(gitDir)
+			}
+			if tt.badConfig {
+				tt.gc.Add(tt.args.repo, tt.args.url)
+				os.Remove(filepath.Join(gitDir, "config"))
+			}
 			if err := tt.gc.Add(tt.args.repo, tt.args.url); (err != nil) != tt.wantErr {
 				t.Errorf("GitCache.Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
