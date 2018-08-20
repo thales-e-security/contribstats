@@ -11,7 +11,7 @@ run: build
 	docker run -ti --rm thalesesecurity/contribstats
 
 helm: check-env
-	helm upgrade --install --set config.token=$(CONTRIBSTATS_TOKEN) --set ingress.istio=true --set config.organizations={thales-e-security} --recreate-pods ghstats chart
+	helm upgrade --install --set config.token=$(CONTRIBSTATS_TOKEN) --set ingress.istio=true --set ingress.enabled=true --set ingress.hosts={contribstats.h2.tes-labs.technology} --set config.organizations={thales-e-security} --recreate-pods contribstats chart
 
 check-env:
 ifndef CONTRIBSTATS_TOKEN

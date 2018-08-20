@@ -43,9 +43,9 @@ func NewGitHubCloneCollector(contants config.Constants, c cache.Cache) (ghc *Git
 
 //RepoResults contains results from an individual repository
 type RepoResults struct {
-	Repo    string
-	Commits int64
-	Lines   int64
+	Repo    string `json:"repo"`
+	Commits int64  `json:"commits"`
+	Lines   int64  `json:"lines"`
 }
 
 //CollectReport contains the results of an entire collection of repos, and an aggregated value of each stats

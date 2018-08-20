@@ -11,7 +11,7 @@ Output of the stats, will be a simple JSON format.
 
 Example:
 `
-{"projects":"100","commits":"1000", "lines":"10000"}` 
+{"projects":100,"commits":1000, "lines":10000}, "repos":[]` 
 
 ## Stats
 
