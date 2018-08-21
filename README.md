@@ -18,12 +18,6 @@ Contribstats is a simple binary that will gather stats about GitHub organization
 It runs as a standalone binary and expects a configuration file, in YAML format.  The default location is 
 ~/.contribstats.yaml and can be overridden via flag `--config`. 
 
-### Binary
-
-If you run this binary standalone the config file will be located at ~/.contribstats.yaml 
-
-### Docker
-
 ## Results
 
 ### Output
