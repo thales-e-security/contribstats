@@ -101,7 +101,9 @@ func (ss *StatServer) startCollector(errs chan error) {
 
 func (ss *StatServer) statsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ss.stats)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	enc.Encode(ss.stats)
 }
 
 func (ss *StatServer) cleanup() {
