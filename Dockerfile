@@ -1,4 +1,4 @@
-FROM golang:1.11-rc as build
+FROM golang:1.11 as build
 ADD main.go /src/contribstats/main.go
 ADD cmd /src/contribstats/cmd
 ADD pkg /src/contribstats/pkg
