@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/thales-e-security/contribstats/pkg/collector"
@@ -64,8 +65,22 @@ func (ss *StatServer) startServer(errs chan error) {
 	// Server the simple API
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ss.statsHandler)
+
+	// Handler
+	var handler http.Handler
+
+	var c *cors.Cors
+	if ss.constants.Origins != nil {
+		c = cors.New(cors.Options{
+			AllowedOrigins: ss.constants.Origins,
+		})
+
+	} else {
+		c = cors.Default()
+	}
+	handler = c.Handler(mux)
 	// Start the server and wait for an error
-	err := http.ListenAndServe(":8080", mux)
+	err := http.ListenAndServe(":8080", handler)
 	if err != nil {
 		errs <- err
 	}

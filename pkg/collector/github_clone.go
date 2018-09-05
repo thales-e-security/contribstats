@@ -107,10 +107,12 @@ func (ghc *GitHubCloneCollector) processRepo(repo *github.Repository, done chan 
 		errs <- err
 		return
 	}
+
 	// Generate the scaffolding
 	r := &RepoResults{
 		Repo: name,
 	}
+
 	// Get Stats on cached repo...
 	r.Commits, r.Lines, err = ghc.cache.Stats(name)
 	if err != nil {

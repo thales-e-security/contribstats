@@ -17,6 +17,7 @@ type Constants struct {
 	Token         string
 	Organizations []string
 	Domains       []string
+	Origins       []string
 	Members       []string
 }
 
@@ -52,6 +53,7 @@ func InitConfig(in string) (constants Constants, err error) {
 			viper.SetDefault("domains", []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"})
 			viper.SetDefault("organizations", []string{"unorepo"})
 			viper.SetDefault("interval", 60)
+			viper.SetDefault("origins", []string{"*"})
 			viper.WriteConfigAs(filepath.Join(home, strings.Join([]string{cfgName, "yml"}, ".")))
 		}
 	}
