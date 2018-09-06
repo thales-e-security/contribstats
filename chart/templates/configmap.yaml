@@ -25,3 +25,4 @@ data:
     {{- range .Values.config.members }}
     - {{ . | lower }}
     {{- end }}
+    cache: {{ .Values.config.cache }}

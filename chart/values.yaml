@@ -12,6 +12,8 @@ image:
 service:
   type: ClusterIP
   port: 8080
+storage:
+  size: 200Gi
 
 config:
   interval: 60
@@ -23,7 +25,7 @@ config:
   - thalesesec.net
   - thales-e-security.com
   - thales-esecurity.com
-
+  cache: /storage
 
 ingress:
   enabled: false

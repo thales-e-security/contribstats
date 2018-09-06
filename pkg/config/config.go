@@ -15,6 +15,7 @@ var readConfig = viper.ReadInConfig
 type Constants struct {
 	Interval      int
 	Token         string
+	Cache         string
 	Organizations []string
 	Domains       []string
 	Origins       []string

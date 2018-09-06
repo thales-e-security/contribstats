@@ -33,9 +33,13 @@ var timeNewTicker = time.NewTicker
 
 //NewStatServer returns an instance of StatServer
 func NewStatServer(constants config.Constants) (ss Server) {
+
+	if constants.Cache == "" {
+		constants.Cache = cache.DefaultCache
+	}
 	ss = &StatServer{
 		stats:     nil,
-		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
+		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
 		constants: constants,
 	}
 
