@@ -38,7 +38,7 @@ func NewStatServer(constants config.Constants) (ss Server) {
 		constants.Cache = cache.DefaultCache
 	}
 	ss = &StatServer{
-		stats:     nil,
+
 		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
 		constants: constants,
 	}

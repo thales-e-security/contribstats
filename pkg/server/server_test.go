@@ -1,6 +1,8 @@
 package server
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -17,6 +19,7 @@ import (
 var constants = config.Constants{
 	Organizations: []string{"unorepo"},
 	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
+	Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
 }
 
 func TestNewStatServer(t *testing.T) {
@@ -29,7 +32,7 @@ func TestNewStatServer(t *testing.T) {
 			name: "OK",
 			wantSs: &StatServer{
 				constants: constants,
-				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
+				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
 			},
 		},
 	}
