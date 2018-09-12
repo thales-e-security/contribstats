@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,9 @@ type StatServer struct {
 }
 
 var osExit = os.Exit
-var cancel = make(chan struct{}, 1)
+var cancel = make(chan bool, 1)
+var collectorCancel = make(chan bool)
+var serverCancel = make(chan bool)
 var errs = make(chan error)
 var timeNewTicker = time.NewTicker
 
@@ -33,16 +36,13 @@ var timeNewTicker = time.NewTicker
 
 //NewStatServer returns an instance of StatServer
 func NewStatServer(constants config.Constants) (ss Server) {
-
 	if constants.Cache == "" {
 		constants.Cache = cache.DefaultCache
 	}
 	ss = &StatServer{
-
 		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
 		constants: constants,
 	}
-
 	return
 }
 
@@ -59,7 +59,8 @@ func (ss *StatServer) Start() (err error) {
 		case err = <-errs:
 			return
 		case <-cancel:
-			ss.cleanup()
+			serverCancel <- true
+			collectorCancel <- true
 			return
 		}
 	}
@@ -69,25 +70,41 @@ func (ss *StatServer) startServer(errs chan error) {
 	// Server the simple API
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ss.statsHandler)
-
+	ctx := context.Background()
 	// Handler
 	var handler http.Handler
-
 	var c *cors.Cors
 	if ss.constants.Origins != nil {
 		c = cors.New(cors.Options{
 			AllowedOrigins: ss.constants.Origins,
 		})
-
 	} else {
 		c = cors.Default()
 	}
 	handler = c.Handler(mux)
 	// Start the server and wait for an error
-	err := http.ListenAndServe(":8080", handler)
-	if err != nil {
-		errs <- err
+	svr := http.Server{
+		Addr:    ":8080",
+		Handler: handler,
 	}
+
+	go func() {
+		err := svr.ListenAndServe()
+		if err != nil {
+			errs <- err
+		}
+	}()
+
+	for {
+		select {
+		case <-errs:
+			return
+		case <-serverCancel:
+			svr.Shutdown(ctx)
+			return
+		}
+	}
+
 }
 
 func (ss *StatServer) startCollector(errs chan error) {

@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -19,10 +20,7 @@ import (
 var testDomains = []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"}
 var testEmails = []string{"test@example.com", "test@example.com"}
 var testCache = cache.NewGitCache(cache.DefaultCache)
-var constants = config.Constants{
-	Organizations: []string{"unorepo"},
-	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
-}
+var constants config.Constants
 
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
@@ -40,6 +38,25 @@ func init() {
 	viper.SetConfigName(".contribstats")
 }
 
+func setupTestCase(t *testing.T) func(t *testing.T) {
+	constants = config.Constants{
+		Organizations: []string{"unorepo"},
+		Domains:       []string{"thalesesec.net", "thales-e-security.com"},
+		Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
+		Interval:      10,
+		Token:         os.Getenv("CONTRIBSTATS_TOKEN"),
+	}
+	return func(t *testing.T) {
+		t.Log("teardown test case")
+	}
+}
+
+func setupSubTest(t *testing.T) func(t *testing.T) {
+	t.Log("setup sub test")
+	return func(t *testing.T) {
+		t.Log("teardown sub test")
+	}
+}
 func TestNewGitHubCloneCollector(t *testing.T) {
 	gh := NewGitHubCloneCollector(constants, testCache)
 
@@ -73,7 +90,8 @@ func TestNewGitHubCloneCollector(t *testing.T) {
 }
 
 func TestGitHubCloneCollector_Collect(t *testing.T) {
-
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	tests := []struct {
 		name          string
 		ghc           *GitHubCloneCollector

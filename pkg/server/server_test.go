@@ -16,21 +16,46 @@ import (
 	"time"
 )
 
-var constants = config.Constants{
-	Organizations: []string{"unorepo"},
-	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
-	Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
-	Interval:      10,
+var constants config.Constants
+
+func setupTestCase(t *testing.T) func(t *testing.T) {
+	constants = config.Constants{
+		Organizations: []string{"unorepo"},
+		Domains:       []string{"thalesesec.net", "thales-e-security.com"},
+		Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
+		Interval:      10,
+		Token:         os.Getenv("CONTRIBSTATS_TOKEN"),
+	}
+
+	return func(t *testing.T) {
+		t.Log("teardown test case")
+	}
+}
+
+func setupSubTest(t *testing.T, origins bool) func(t *testing.T) {
+	if origins {
+		constants.Origins = []string{"thalesecurity.com"}
+	}
+	return func(t *testing.T) {
+		t.Log("teardown sub test")
+	}
 }
 
 func TestNewStatServer(t *testing.T) {
-
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	tests := []struct {
 		name   string
 		wantSs Server
 	}{
 		{
 			name: "OK",
+			wantSs: &StatServer{
+				constants: constants,
+				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
+			},
+		}, {
+			name: "OK - No Cache",
 			wantSs: &StatServer{
 				constants: constants,
 				collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
@@ -47,6 +72,8 @@ func TestNewStatServer(t *testing.T) {
 }
 
 func TestStatServer_Start(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	tests := []struct {
 		name    string
 		ss      Server
@@ -92,7 +119,7 @@ func TestStatServer_Start(t *testing.T) {
 			// Canceling
 			if tt.cancel {
 				// Kill it ...
-				cancel <- struct{}{}
+				cancel <- true
 			}
 
 			// repair os.Exit
@@ -107,15 +134,17 @@ func TestStatServer_Start(t *testing.T) {
 }
 
 func TestStatServer_startServer(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	type args struct {
 		errs chan error
 	}
-
 	ss := NewStatServer(constants)
 	tests := []struct {
-		name string
-		ss   *StatServer
-		args args
+		name    string
+		ss      *StatServer
+		args    args
+		origins bool
 	}{
 		{
 			name: "OK",
@@ -126,17 +155,23 @@ func TestStatServer_startServer(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		go func() {
-			time.Sleep(2 * time.Second)
-			tt.args.errs <- errors.New("Some Error")
-		}()
+
 		t.Run(tt.name, func(t *testing.T) {
+			teardown := setupSubTest(t, tt.origins)
+			defer teardown(t)
+			// Only run the server for a few seconds
+			go func() {
+				time.Sleep(2 * time.Second)
+				serverCancel <- true
+			}()
 			tt.ss.startServer(tt.args.errs)
 		})
 	}
 }
 
 func TestStatServer_startCollector(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	type args struct {
 		errs chan error
 	}
@@ -194,6 +229,8 @@ func TestStatServer_startCollector(t *testing.T) {
 }
 
 func TestStatServer_cleanup(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	tests := []struct {
 		name string
 		ss   *StatServer
@@ -214,6 +251,8 @@ func TestStatServer_cleanup(t *testing.T) {
 }
 
 func TestStatServer_statsHandler(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	type args struct {
 		w http.ResponseWriter
 		r *http.Request
