@@ -42,7 +42,7 @@ func setupTestCase(t *testing.T) func(t *testing.T) {
 	constants = config.Constants{
 		Organizations: []string{"unorepo"},
 		Domains:       []string{"thalesesec.net", "thales-e-security.com"},
-		Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
+		Cache:         filepath.Join(os.TempDir(), t.Name()),
 		Interval:      10,
 		Token:         os.Getenv("CONTRIBSTATS_TOKEN"),
 	}
@@ -58,6 +58,8 @@ func setupSubTest(t *testing.T) func(t *testing.T) {
 	}
 }
 func TestNewGitHubCloneCollector(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
 	gh := NewGitHubCloneCollector(constants, testCache)
 
 	type args struct {
