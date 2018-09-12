@@ -15,4 +15,3 @@ COPY --from=build /src/contribstats/contribstats /entrypoint
 ADD .sample-contribstats.yml /config/.contribstats.yml
 EXPOSE 8080
 ENTRYPOINT ["/entrypoint"]
-CMD ["--debug"]

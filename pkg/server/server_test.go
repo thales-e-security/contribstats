@@ -20,6 +20,7 @@ var constants = config.Constants{
 	Organizations: []string{"unorepo"},
 	Domains:       []string{"thalesesec.net", "thales-e-security.com"},
 	Cache:         filepath.Join(os.TempDir(), "contribstatstest"),
+	Interval:      10,
 }
 
 func TestNewStatServer(t *testing.T) {
@@ -109,14 +110,26 @@ func TestStatServer_startServer(t *testing.T) {
 	type args struct {
 		errs chan error
 	}
+
+	ss := NewStatServer(constants)
 	tests := []struct {
 		name string
 		ss   *StatServer
 		args args
 	}{
-		//TODO: Add Test Cases
+		{
+			name: "OK",
+			ss:   ss.(*StatServer),
+			args: args{
+				errs: make(chan error),
+			},
+		},
 	}
 	for _, tt := range tests {
+		go func() {
+			time.Sleep(2 * time.Second)
+			tt.args.errs <- errors.New("Some Error")
+		}()
 		t.Run(tt.name, func(t *testing.T) {
 			tt.ss.startServer(tt.args.errs)
 		})

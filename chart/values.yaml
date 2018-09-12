@@ -8,7 +8,7 @@ image:
   repository: thalesesecurity/contribstats
   tag: latest
   pullPolicy: Always
-
+  debug: false
 service:
   type: ClusterIP
   port: 8080

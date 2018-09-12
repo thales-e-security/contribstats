@@ -2,11 +2,18 @@ package collector
 
 import (
 	"github.com/thales-e-security/contribstats/pkg/config"
+	"log"
 	"testing"
 )
 
 func init() {
 	config.InitConfig("")
+}
+
+func ExampleNewV3Client() {
+
+	c, _ := NewV3Client(config.Constants{})
+	log.Println(c)
 }
 
 func TestNewV3Client(t *testing.T) {
