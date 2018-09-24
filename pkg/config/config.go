@@ -11,8 +11,8 @@ var cfgName = ".contribstats"
 var homedirDir = homedir.Dir
 var readConfig = viper.ReadInConfig
 
-//Constants store the viper config results after loading for layer passing around
-type Constants struct {
+//Config stores the viper config results after loading for layer passing around
+type Config struct {
 	Interval      int
 	Token         string
 	Cache         string
@@ -20,10 +20,11 @@ type Constants struct {
 	Domains       []string
 	Origins       []string
 	Members       []string
+	Blacklist     []string
 }
 
 //InitConfig reads in config file and ENV variables if set.
-func InitConfig(in string) (constants Constants, err error) {
+func InitConfig(in string) (constants Config, err error) {
 	// Find home directory.
 	var home string
 	home, err = homedirDir()

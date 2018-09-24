@@ -11,7 +11,7 @@ jobs:
         command: go mod download
     - run:
         name: Unit Tests
-        command: go test -race -v $(go list ./... | grep -v /vendor/)
+        command: go test -short -race -v $(go list ./... | grep -v /vendor/)
     - run:
         name: Code Coverage
         command: go test -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v /vendor/)

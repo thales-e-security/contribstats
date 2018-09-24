@@ -1,16 +1,16 @@
 package cache
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"bytes"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/format/diff"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 //DefaultCache location for where to cache cloned/fetched repos
@@ -42,6 +42,8 @@ func (gc *GitCache) Path() string {
 
 //Add will add a given repo's name and it's clone URL to the cache for later processing
 func (gc *GitCache) Add(reponame, url string) (err error) {
+
+	bb := &bytes.Buffer{}
 	repoPath := filepath.Join(gc.Path(), reponame)
 	var rep *git.Repository
 	if _, err = os.Stat(repoPath); err != nil {
@@ -49,8 +51,8 @@ func (gc *GitCache) Add(reponame, url string) (err error) {
 			// Clone non-existing repos...
 			if rep, err = git.PlainClone(repoPath, false, &git.CloneOptions{
 				URL:        url,
-				Progress:   &bytes.Buffer{},
-				RemoteName: "",
+				Progress:   bb,
+				RemoteName: "origin",
 			}); err != nil {
 				return
 			}
@@ -63,37 +65,43 @@ func (gc *GitCache) Add(reponame, url string) (err error) {
 		if rep, err = git.PlainOpenWithOptions(repoPath, &git.PlainOpenOptions{
 			DetectDotGit: true,
 		}); err != nil {
+			err = errors.Wrap(err, reponame)
+
 			return
 		}
 		if err = rep.Fetch(&git.FetchOptions{
-			Progress: &bytes.Buffer{},
+			RemoteName: "origin",
+			Progress:   bb,
+			Force:      true,
 		}); err != nil {
 			if git.NoErrAlreadyUpToDate.Error() == err.Error() {
 				err = nil
 			} else {
+				err = errors.Wrap(err, reponame)
 				return
 			}
 		}
-		logrus.Debugf("Fetched %v in %v", reponame, repoPath)
+		//logrus.Debugf("Fetched %v in %v", reponame, repoPath)
 	}
 	return
 }
 
 //Stats processes a given reponame for stats and returns the number of commits and lines of matched members, or domains.
 func (gc *GitCache) Stats(reponame string) (commits int64, lines int64, err error) {
-	logrus.Debugf("Processing repo '%s'", reponame)
+	//logrus.Debugf("Processing repo '%s'", reponame)
 	var rep *git.Repository
 	var logs object.CommitIter
 	repoPath := filepath.Join(gc.Path(), reponame)
 	members := viper.GetStringSlice("members")
 	domains := viper.GetStringSlice("domains")
 	if rep, err = git.PlainOpen(repoPath); err != nil {
-		logrus.Error(err)
 		return
 	}
 	if logs, err = rep.Log(&git.LogOptions{
 		Order: git.LogOrderDefault,
+		From:  plumbing.ZeroHash,
 	}); err != nil {
+		err = errors.Wrap(err, reponame)
 		return
 	}
 	// For each commit entry, let's process the contents
@@ -114,7 +122,6 @@ func (gc *GitCache) Stats(reponame string) (commits int64, lines int64, err erro
 				return
 			}
 			lines = lines + newLines
-			//logrus.Debugf("[%s] commit %s had %d lines", reponame, commit.Hash, lines)
 		}
 		return
 	})
@@ -160,9 +167,8 @@ func getLines(commit CommitIface) (lines int64, err error) {
 		}
 		// Range over the chunks in a given filepatch
 		for _, chunk := range p.Chunks() {
-			if chunk.Type() == diff.Add || chunk.Type() == diff.Equal {
-				continue
-			}
+			// Line count is very blunt... maybe some tuning to be more honest in the future
+			// TODO make this more real life
 			ll := strings.Split(chunk.Content(), "\n")
 			lines = lines + int64(len(ll))
 		}

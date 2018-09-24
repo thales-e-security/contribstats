@@ -60,7 +60,7 @@ func TestExecute(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			debug = tt.debug
-			serverNewStatServer = func(huh config.Constants) (ss server.Server) {
+			serverNewStatServer = func(huh config.Config) (ss server.Server) {
 				ss = tt.s
 
 				return

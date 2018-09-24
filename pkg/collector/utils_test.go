@@ -12,7 +12,7 @@ func init() {
 
 func ExampleNewV3Client() {
 
-	c, _ := NewV3Client(config.Constants{})
+	c, _ := NewV3Client(config.Config{})
 	log.Println(c)
 }
 
@@ -23,20 +23,20 @@ func TestNewV3Client(t *testing.T) {
 		wantClient bool
 		wantAuth   bool
 		wantCtx    bool
-		constants  config.Constants
+		constants  config.Config
 	}{
 		{
 			name:       "Anon",
 			wantClient: true,
 			wantAuth:   false,
 			wantCtx:    true,
-			constants:  config.Constants{},
+			constants:  config.Config{},
 		}, {
 			name:       "Token",
 			wantClient: true,
 			wantAuth:   true,
 			wantCtx:    true,
-			constants:  config.Constants{},
+			constants:  config.Config{},
 		},
 	}
 	for _, tt := range tests {

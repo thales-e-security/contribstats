@@ -44,7 +44,7 @@ func (mc *MockCommit) Parent(i int) (*object.Commit, error) {
 	if mc.parentsErr {
 		return nil, errors.New("Expected Error")
 	}
-	return mc.Commit.Parent(i)
+	return mc.gc.Parent(i)
 }
 
 func (mc *MockCommit) File(path string) (*object.File, error) {

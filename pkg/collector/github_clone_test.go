@@ -17,10 +17,8 @@ import (
 	"time"
 )
 
-var testDomains = []string{"thalesesecurity.com", "thalesesec.net", "thales-e-security.com"}
-var testEmails = []string{"test@example.com", "test@example.com"}
 var testCache = cache.NewGitCache(cache.DefaultCache)
-var constants config.Constants
+var constants config.Config
 
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
@@ -39,7 +37,7 @@ func init() {
 }
 
 func setupTestCase(t *testing.T) func(t *testing.T) {
-	constants = config.Constants{
+	constants = config.Config{
 		Organizations: []string{"unorepo"},
 		Domains:       []string{"thalesesec.net", "thales-e-security.com"},
 		Cache:         filepath.Join(os.TempDir(), t.Name()),
@@ -66,7 +64,7 @@ func TestNewGitHubCloneCollector(t *testing.T) {
 		organization string
 		token        string
 		cache        cache.Cache
-		constants    config.Constants
+		constants    config.Config
 	}
 	tests := []struct {
 		name string
@@ -74,7 +72,7 @@ func TestNewGitHubCloneCollector(t *testing.T) {
 		want *GitHubCloneCollector
 	}{
 		{
-			name: "thales-e-security",
+			name: "OK",
 			args: args{
 				constants: constants,
 				cache:     testCache,
@@ -108,7 +106,7 @@ func TestGitHubCloneCollector_Collect(t *testing.T) {
 			ghc:           NewGitHubCloneCollector(constants, testCache),
 			wantStats:     true,
 			wantErr:       false,
-			organizations: []string{"thales-e-security"},
+			organizations: []string{"unorepo"},
 		},
 		{
 			name:          "Error",
@@ -122,7 +120,7 @@ func TestGitHubCloneCollector_Collect(t *testing.T) {
 			wantStats:     false,
 			wantErr:       true,
 			wantTimeout:   true,
-			organizations: []string{"thales-e-security"},
+			organizations: []string{"unorepo"},
 		},
 	}
 	for _, tt := range tests {
@@ -152,6 +150,13 @@ func TestGitHubCloneCollector_Collect(t *testing.T) {
 }
 
 func TestGitHubCloneCollector_processRepo(t *testing.T) {
+	teardown := setupTestCase(t)
+	defer teardown(t)
+	rs, ctx := NewV3Client(constants)
+	repo, _, err := rs.Repositories.Get(ctx, "thales-e-security", "linux-kernel")
+	if err != nil {
+		t.Fatal(err)
+	}
 	type args struct {
 		repo *github.Repository
 		done chan *RepoResults
@@ -167,10 +172,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			name: "Good",
 			ghc:  NewGitHubCloneCollector(constants, cache.NewGitCache(cache.DefaultCache)),
 			args: args{
-				repo: &github.Repository{
-					Name:     github.String("linux-kernel"),
-					FullName: github.String("thales-e-security/linux-kernel"),
-				},
+				repo: repo,
 				done: make(chan *RepoResults, 1),
 				errs: make(chan error, 1),
 			},
@@ -179,10 +181,8 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			name: "Error Add",
 			ghc:  NewGitHubCloneCollector(constants, &MockCache{add: true}),
 			args: args{
-				repo: &github.Repository{
-					Name:     github.String("linux-kernel"),
-					FullName: github.String("thales-e-security/linux-kernel"),
-				},
+				repo: repo,
+
 				done: make(chan *RepoResults, 1),
 				errs: make(chan error, 1),
 			},
@@ -191,10 +191,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			name: "Error Add",
 			ghc:  NewGitHubCloneCollector(constants, &MockCache{stats: true}),
 			args: args{
-				repo: &github.Repository{
-					Name:     github.String("linux-kernel"),
-					FullName: github.String("thales-e-security/linux-kernel"),
-				},
+				repo: repo,
 				done: make(chan *RepoResults, 1),
 				errs: make(chan error, 1),
 			},
@@ -208,7 +205,7 @@ func TestGitHubCloneCollector_processRepo(t *testing.T) {
 			select {
 			case err := <-tt.args.errs:
 				if (err != nil) != tt.wantErr {
-					t.Errorf("GitHubCloneCollector.processRepo() error = %v, wantErr %v", (err != nil), tt.wantErr)
+					t.Errorf("GitHubCloneCollector.processRepo() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 			case <-tt.args.done:

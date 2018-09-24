@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/thales-e-security/contribstats/pkg/cache"
 	"github.com/thales-e-security/contribstats/pkg/collector"
 	"github.com/thales-e-security/contribstats/pkg/config"
@@ -22,7 +23,7 @@ type Server interface {
 type StatServer struct {
 	stats     *collector.CollectReport
 	collector collector.Collector
-	constants config.Constants
+	constants config.Config
 }
 
 var osExit = os.Exit
@@ -35,14 +36,23 @@ var timeNewTicker = time.NewTicker
 //var httpListenAndServe = http.ListenAndServe
 
 //NewStatServer returns an instance of StatServer
-func NewStatServer(constants config.Constants) (ss Server) {
+func NewStatServer(constants config.Config) (ss Server) {
 	if constants.Cache == "" {
 		constants.Cache = cache.DefaultCache
 	}
-	ss = &StatServer{
+	//var cr *collector.CollectReport
+	s := &StatServer{
 		collector: collector.NewGitHubCloneCollector(constants, cache.NewGitCache(constants.Cache)),
 		constants: constants,
 	}
+	cr := viper.Get("stats")
+	switch cr.(type) {
+	case *collector.CollectReport:
+		s.stats = cr.(*collector.CollectReport)
+	case nil:
+	}
+
+	ss = s
 	return
 }
 
@@ -115,6 +125,7 @@ func (ss *StatServer) startCollector(errs chan error) {
 		errs <- err
 		return
 	}
+	ss.cacheStats()
 	logrus.Info("Updated Cache and Stats")
 	// Ticker to run the job on an interval provided by the config file... defaults to 60 seconds...
 	ticker := timeNewTicker(time.Duration(ss.constants.Interval) * time.Second)
@@ -128,11 +139,20 @@ func (ss *StatServer) startCollector(errs chan error) {
 					errs <- err
 				}
 				logrus.Info("Updated Cache and Stats")
+				// Cache stats to disk for later
+				ss.cacheStats()
 			}
 		}
 	}()
 
 	return
+}
+
+func (ss *StatServer) cacheStats() (err error) {
+
+	viper.Set("stats", ss.stats)
+
+	return viper.WriteConfig()
 }
 
 func (ss *StatServer) statsHandler(w http.ResponseWriter, r *http.Request) {

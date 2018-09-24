@@ -2,8 +2,8 @@ package collector
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/github"
@@ -26,12 +26,12 @@ type GitHubCloneCollector struct {
 	ctx       context.Context
 	done      chan *RepoResults
 	errs      chan error
-	constants config.Constants
+	constants config.Config
 }
 
 //NewGitHubCloneCollector returns a GitHubCloneCollector.
 //
-func NewGitHubCloneCollector(contants config.Constants, c cache.Cache) (ghc *GitHubCloneCollector) {
+func NewGitHubCloneCollector(contants config.Config, c cache.Cache) (ghc *GitHubCloneCollector) {
 	ghc = &GitHubCloneCollector{
 		cache:     c,
 		constants: contants,
@@ -99,11 +99,18 @@ func (ghc *GitHubCloneCollector) Collect() (stats *CollectReport, err error) {
 //TODO: Process activity on a given repo for stats from this organization.
 func (ghc *GitHubCloneCollector) processRepo(repo *github.Repository, done chan *RepoResults, errs chan error) {
 
+	// Check if repo is on blacklist
+	for _, reponame := range ghc.constants.Blacklist {
+		if strings.ToLower(reponame) == strings.ToLower(repo.String()) {
+			logrus.Warn("Skipping Blacklisted item: ")
+		}
+	}
+
 	var err error
 	// First let's clone it to the local cache dir.
 	name := filepath.Join("github.com", repo.GetFullName())
-	if err := ghc.cache.Add(name, repo.GetCloneURL()); err != nil {
-		errors.Wrap(err, fmt.Sprintf("%v:", name))
+	if err = ghc.cache.Add(name, repo.GetCloneURL()); err != nil {
+		err = errors.Wrap(err, "add")
 		errs <- err
 		return
 	}
@@ -112,11 +119,9 @@ func (ghc *GitHubCloneCollector) processRepo(repo *github.Repository, done chan 
 	r := &RepoResults{
 		Repo: name,
 	}
-
 	// Get Stats on cached repo...
-	r.Commits, r.Lines, err = ghc.cache.Stats(name)
-	if err != nil {
-		errors.Wrap(err, fmt.Sprintf("%v:", name))
+	if r.Commits, r.Lines, err = ghc.cache.Stats(name); err != nil {
+		err = errors.Wrap(err, "stats")
 		errs <- err
 		return
 	}

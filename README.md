@@ -8,7 +8,7 @@ Microservice/command to get a collection stats for a given GitHub Organization.
 
 ### Requirements
 
-- Go 1.11rc1+  For go module support
+- Go 1.11+  For go module support
 
 
 ## Running

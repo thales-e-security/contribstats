@@ -11,7 +11,7 @@ import (
 )
 
 //NewV3Client returns an authenticated or anonymous GitHub v3 client
-func NewV3Client(constants config.Constants) (client *github.Client, ctx context.Context) {
+func NewV3Client(constants config.Config) (client *github.Client, ctx context.Context) {
 	ctx = context.Background()
 	var tc *http.Client
 	// Get authenticadtion if token present

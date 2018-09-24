@@ -16,10 +16,10 @@ import (
 	"time"
 )
 
-var constants config.Constants
+var constants config.Config
 
 func setupTestCase(t *testing.T) func(t *testing.T) {
-	constants = config.Constants{
+	constants = config.Config{
 		Organizations: []string{"unorepo"},
 		Domains:       []string{"thalesesec.net", "thales-e-security.com"},
 		Cache:         filepath.Join(os.TempDir(), "contribstatstest"),

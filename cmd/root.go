@@ -27,7 +27,7 @@ var cfgFile string
 var debug bool
 var s server.Server
 var serverNewStatServer = server.NewStatServer
-var constants config.Constants
+var constants config.Config
 
 func init() {
 
@@ -46,7 +46,7 @@ var RootCmd = &cobra.Command{
 		}
 		s = serverNewStatServer(constants)
 		if err := s.Start(); err != nil {
-			logrus.Error(err)
+			logrus.Fatal(err)
 		}
 	},
 }

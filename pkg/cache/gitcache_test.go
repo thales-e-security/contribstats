@@ -248,6 +248,16 @@ func Test_getLines(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		}, {
+			name: "ErrorParent",
+			args: args{
+				commit: &MockCommit{
+					treeErr:    true,
+					parentsNum: 2,
+					gc:         getGoodCommit(t),
+				},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
